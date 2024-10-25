@@ -1,0 +1,100 @@
+/* Import the custom RimWordFont and Roboto */
+@font-face {
+    font-family: 'RimWordFont';
+    src: url('fonts/RimWordFont.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap');
+
+/* General body styling with a gradient background */
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1b2838, #1d2b36 60%);
+}
+
+/* Centering container */
+.container {
+    padding: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: transparent;
+}
+
+/* Gray box with drop shadow */
+.rectangle {
+    background-color: #2a2a2a;
+    border: 2px solid #3a3a3a;
+    width: 300px;
+    height: 160px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 15px 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.6);
+    border-radius: 6px;
+}
+
+/* Title with custom font and gradient text */
+.title {
+    font-family: 'RimWordFont', sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+    margin-top: 5px;
+    margin-bottom: 4px;
+    text-align: center;
+    background: linear-gradient(to bottom, #eeeeee, #cccccc, #838383);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+}
+
+/* Text content with justified text and centered last line */
+.text {
+    font-family: 'Roboto', sans-serif;
+    font-size: 13px;
+    color: #cccccc;
+    padding: 0 10px;
+    margin-top: -3px;
+    line-height: 1.5;
+    text-align: justify;
+    text-align-last: center;
+}
+
+/* Footer positioned in the bottom-right corner */
+.footer {
+    font-family: 'Roboto', sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    text-align: right;
+    color: #ffffff;
+}
+
+/* Gradient effect for "Nonunon" text */
+.footer span {
+    background: linear-gradient(to bottom, #ffffff, #cceeff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Styling for the Nonunon link */
+.footer a {
+    color: #66c0f4;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    text-decoration: underline;
+}
