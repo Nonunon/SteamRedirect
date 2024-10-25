@@ -98,3 +98,23 @@ body {
 .footer a:hover {
     text-decoration: underline;
 }
+
+/* Styles for the new link section */
+.link-section {
+    font-family: 'Roboto', sans-serif;
+    font-size: 15px; /* Slightly larger */
+    color: #dddddd; /* Brighter color */
+    font-weight: bold;
+    text-align: center;
+    margin-top: -10px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5); /* Subtle drop shadow */
+}
+
+.link-section a {
+    color: #66c0f4;
+    text-decoration: none;
+}
+
+.link-section a:hover {
+    text-decoration: underline;
+}

@@ -9,9 +9,15 @@
 <body>
     <div class="container">
         <div class="rectangle">
-            <div class="title">SteamRedirect</div>
+            <div class="title" id="title">SteamRedirect</div>
+            
+            <!-- New link section between title and text -->
+            <div class="link-section" id="link-section">
+                <!-- Populated by JavaScript -->
+            </div>
+            
             <div class="text">
-                This page helps redirect <b><i>Steam Workshop</i></b> links for use in <b><i>Discord</i></b>, where direct linking via <u>steam://</u> is restricted. Open this page to be automatically sent to the <b><i>Steam</i></b> item you're trying to access.
+                This page helps redirect <b><i>Steam Workshop</i></b> links for use in <b><i>Discord</i></b>, where direct linking via <u>steam://</u> is restricted. This should open the <b><i>Steam</i></b> item directly in your Steam client.
             </div>
         </div>
     </div>
@@ -20,5 +26,26 @@
     <div class="footer">
         Created by <a href="https://github.com/Nonunon" target="_blank"><span>Nonunon</span></a>
     </div>
+
+    <script>
+        // Extract the Steam Workshop ID from URL query string
+        const urlParams = new URLSearchParams(window.location.search);
+        const itemId = urlParams.get('id');
+
+        // Check if itemId exists and is a valid number
+        if (itemId && !isNaN(itemId)) {
+            // Directly use Steam protocol to open the item in the Steam client
+            window.location.href = `steam://url/CommunityFilePage/${itemId}`;
+
+            // Create the normal Steam link and display it in the link-section div
+            const linkSection = document.getElementById('link-section');
+            linkSection.innerHTML = `
+                <p>Opening: <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${itemId}" target="_blank">${itemId}</a></p>
+            `;
+        } else {
+            // Show an error if the ID is invalid or missing
+            document.getElementById('title').innerText = "Invalid Workshop ID";
+        }
+    </script>
 </body>
 </html>
