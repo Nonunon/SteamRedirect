@@ -7,7 +7,8 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="images/SteamRedirect-32x32.png" sizes="32x32">
     <link rel="icon" href="images/SteamRedirect-16x16.png" sizes="16x16">
-    
+    <meta name="theme-color" content="#1b2838">
+	
     <!-- Open Graph meta tags -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://nonunon.github.io/SteamRedirect/">
@@ -16,17 +17,31 @@
     <meta property="og:image" content="https://nonunon.github.io/SteamRedirect/images/Preview.png">
 </head>
 <body>
-    <div class="container">
-        <div class="rectangle">
-            <div class="title" id="title">SteamRedirect</div>
-            
-            <!-- New link section between title and text -->
-            <div class="link-section" id="link-section"></div>
-            
-            <div class="text">
-                This page helps redirect <b><i>Steam Workshop</i></b> links for use in <b><i>Discord</i></b>, where direct linking via <u>steam://</u> is restricted. This should open the <b><i>Steam</i></b> item directly in your Steam client.
-            </div>
-        </div>
+<div class="rectangle">
+    <div class="title" id="title">SteamRedirect</div>
+    
+    <!-- Text Section -->
+    <div class="text">
+        This page helps redirect <b><i>Steam Workshop</i></b> links for use in <b><i>Discord</i></b>, where direct linking via <u>steam://</u> is restricted. This should open the <b><i>Steam</i></b> item directly in your Steam client.
+    </div>
+
+    <!-- Countdown and Link Section -->
+    <div class="link-section" id="link-section"></div>
+
+    <!-- Instructions Section -->
+    <div class="instructions">
+        <p><b>How to Use SteamRedirect:</b></p>
+        <p>
+            1. Go to the <i>Steam Workshop</i> item you want to share. <br>
+            2. Copy the Workshop ID in the URL after <code>?id=</code>. <br>
+            3. Add it to this page’s URL as <code>?id=WORKSHOP_ID</code>. <br>
+            4. Open the URL in your browser. <br>
+            5. This page will open the item in your <i>Steam</i> client. <br>
+            6. If <i>Steam</i> is closed, it will redirect to the Workshop page in <b>10 seconds</b>.
+        </p>
+    </div>
+</div>
+
     </div>
 
     <!-- Image section above footer -->
@@ -40,29 +55,7 @@
     <div class="footer">
         Created by <a href="https://github.com/Nonunon" target="_blank"><span>Nonunon</span></a>
     </div>
-
-    <script>
-        // Extract the Steam Workshop ID from URL query string
-        const urlParams = new URLSearchParams(window.location.search);
-        const itemId = urlParams.get('id');
-
-        // Update the og:url meta tag if an ID is present
-        if (itemId && !isNaN(itemId)) {
-            const ogUrlMeta = document.querySelector('meta[property="og:url"]');
-            ogUrlMeta.setAttribute('content', `https://nonunon.github.io/SteamRedirect/?id=${itemId}`);
-
-            // Directly use Steam protocol to open the item in the Steam client
-            window.location.href = `steam://url/CommunityFilePage/${itemId}`;
-
-            // Create the normal Steam link and display it in the link-section div
-            const linkSection = document.getElementById('link-section');
-            linkSection.innerHTML = `
-                <p>Opening: <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${itemId}" target="_blank">${itemId}</a></p>
-            `;
-        } else {
-            // Show an error if the ID is invalid or missing
-            document.getElementById('title').innerText = "Invalid Workshop ID";
-        }
-    </script>
+	
+    <script src="script.js"></script>
 </body>
 </html>
