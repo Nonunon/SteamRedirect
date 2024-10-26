@@ -69,7 +69,7 @@ body {
     text-align-last: center;
 }
 
-/* Footer positioned in the bottom-right corner */
+/* Adjust footer position to allow space for image */
 .footer {
     font-family: 'Roboto', sans-serif;
     font-size: 14px;
@@ -80,7 +80,6 @@ body {
     text-align: right;
     color: #ffffff;
 }
-
 /* Gradient effect for "Nonunon" text */
 .footer span {
     background: linear-gradient(to bottom, #ffffff, #cceeff);
@@ -118,3 +117,24 @@ body {
 .link-section a:hover {
     text-decoration: underline;
 }
+
+/* Styles for the new image section in the bottom-right corner */
+.image-section {
+    position: absolute;
+    bottom: 20px;  /* Align with the footer */
+    right: 50px;   /* Slightly left of the footer for spacing */
+}
+
+/* Image styling */
+.image-section img {
+    max-width: 64px;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+}
+
+/* Allow right-click context menu */
+.image-section a {
+    pointer-events: auto; /* Allow right-click on the link itself */
+}
+
