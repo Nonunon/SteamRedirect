@@ -21,12 +21,6 @@ async function fetchWorkshopData(workshopId) {
             <p id="redirect-message">Redirecting to the workshop page in <span id="countdown">10</span> seconds. <a href="#" id="cancelRedirect">Cancel Redirect</a></p>
         `;
 
-        // Update OG tags with fetched data
-        document.querySelector('meta[property="og:title"]').setAttribute("content", data.title || "Workshop Item");
-        document.querySelector('meta[property="og:description"]').setAttribute("content", "Redirecting to the specified Steam Workshop item.");
-        document.querySelector('meta[property="og:image"]').setAttribute("content", data.previewImage);
-        document.querySelector('meta[property="og:url"]').setAttribute("content", `https://nonunon.github.io/SteamRedirect/?id=${workshopId}`);
-
         // Start countdown and redirection
         startCountdown(workshopId);
     } catch (error) {
@@ -66,13 +60,10 @@ function startCountdown(workshopId) {
 
 // Main code to execute based on presence and validity of item ID
 if (itemId && !isNaN(itemId)) {
-    // Set the Open Graph URL meta tag immediately
-    document.querySelector('meta[property="og:url"]').setAttribute('content', `https://nonunon.github.io/SteamRedirect/?id=${itemId}`);
-
     // Directly use Steam protocol to open the item in the Steam client
     window.location.href = `steam://url/CommunityFilePage/${itemId}`;
 
-    // Fetch data from Cloudflare Worker to update OG tags and page content
+    // Fetch data from Cloudflare Worker to display content on the page
     fetchWorkshopData(itemId);
 
 } else if (itemId === '') {
