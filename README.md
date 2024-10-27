@@ -9,7 +9,7 @@ SteamRedirect is a straightforward GitHub Pages-based project designed to redire
 - **Optimized for Discord**: Tailored for cleaner link handling in Discord channels.
 - **Lightweight & Simple**: Minimal and easy to use
 
-## How to Use
+## How to Use / What It Does
 
 To redirect, use the following format:
 
@@ -19,7 +19,7 @@ https://nonunon.github.io/SteamRedirect/?id=[WORKSHOP_ID]
 
 Replace `[WORKSHOP_ID]` with the relevant Steam Workshop ID to generate the link.
 
-## Create Your SteamRedirect Bookmarklet
+## Create A SteamRedirect Bookmarklet
 
 To easily redirect Steam Workshop links, you can create a bookmarklet by following these steps:
 
