@@ -117,6 +117,13 @@ body {
     text-decoration: underline;
 }
 
+.link-section img {
+    max-width: 100%;
+    border-radius: 5px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+
 /* Styles for the new image section in the bottom-right corner */
 .image-section {
     position: absolute;
