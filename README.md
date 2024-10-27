@@ -19,6 +19,7 @@ https://nonunon.github.io/SteamRedirect/?id=[WORKSHOP_ID]
 
 Replace `[WORKSHOP_ID]` with the relevant Steam Workshop ID to generate the link.
 
+
 ### Create Your SteamRedirect Bookmarklet
 
 To easily redirect Steam Workshop links, you can create a bookmarklet by following these steps:
@@ -41,10 +42,6 @@ To easily redirect Steam Workshop links, you can create a bookmarklet by followi
 3. **Create a new bookmark** and paste the code into the **URL** field of the bookmark.
 4. **Name the bookmark** something memorable, like "SteamRedirect".
 5. **Use the Bookmarklet**: Whenever you're on a Steam Workshop page, click this bookmark to automatically redirect to SteamRedirect with the correct Workshop ID.
-
-Now you’re ready to quickly and easily convert Workshop links!
-
-
 
 ## License
 
