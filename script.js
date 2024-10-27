@@ -1,6 +1,7 @@
 // Extract the Steam Workshop ID from URL query string
 const urlParams = new URLSearchParams(window.location.search);
 const itemId = urlParams.get('id');
+const titleElement = document.getElementById('title');
 
 // Check if a valid item ID is present
 if (itemId && !isNaN(itemId)) {
@@ -45,7 +46,11 @@ if (itemId && !isNaN(itemId)) {
         document.getElementById('redirect-message').innerText = "Redirect Canceled";
     });
 
+} else if (itemId === null || itemId === '') {
+    // No ID found or empty ?id=
+    titleElement.innerText = "SteamRedirect";
 } else {
-    // Display error if ID is invalid or missing
-    document.getElementById('title').innerText = "Invalid Workshop ID";
+    // Display error if ID is invalid
+    titleElement.innerText = "Invalid Workshop ID";
+    titleElement.style.fontSize = '22px'; // Adjust font size slightly smaller for the error message
 }
