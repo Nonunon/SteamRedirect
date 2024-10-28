@@ -1,7 +1,7 @@
 
 # SteamRedirect
 
-SteamRedirect is a straightforward GitHub Pages-based project designed to redirect Steam Workshop links seamlessly, especially for sharing on Discord. By appending a Steam Workshop ID to the URL, users are directed to the corresponding Steam Workshop page, making link management easy and efficient.
+SteamRedirect is a straightforward GitHub Pages-based project designed to redirect specific links seamlessly, especially for sharing on Discord. By appending a Steam Workshop ID to the URL, users are directed to the corresponding Steam Workshop page, making link management easy and efficient.
 
 ## Features
 
@@ -9,7 +9,7 @@ SteamRedirect is a straightforward GitHub Pages-based project designed to redire
 - **Optimized for Discord**: Tailored for cleaner link handling in Discord channels.
 - **Lightweight & Simple**: Minimal and easy to use
 
-## How to Use / What It Does
+## How to Use
 
 To redirect, use the following format:
 
@@ -19,7 +19,7 @@ https://nonunon.github.io/SteamRedirect/?id=[WORKSHOP_ID]
 
 Replace `[WORKSHOP_ID]` with the relevant Steam Workshop ID to generate the link.
 
-## Create A SteamRedirect Bookmarklet
+## Create Your SteamRedirect Bookmarklet
 
 To easily redirect Steam Workshop links, you can create a bookmarklet by following these steps:
 
@@ -48,11 +48,19 @@ Now you’re ready to quickly and easily convert Workshop links!
 
 To add a convenient "SteamRedirect" button directly to Steam Workshop pages, follow these steps:
 
-[![Install this script](https://img.shields.io/badge/Install%20User%20Script-green?style=for-the-badge)](https://github.com/Nonunon/SteamRedirect/raw/main/SteamRedirect.user.js)
+### Requirements
+
+To use this project, you’ll need one of the following user script managers installed in your browser:
+
+- [Violentmonkey](https://violentmonkey.github.io/get-it/)
+- [Greasemonkey](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/)
+- [Tampermonkey](https://www.tampermonkey.net/)
+
+[![Install this script](https://img.shields.io/badge/Install%20User%20Script-green?style=for-the-badge)](https://github.com/YourUsername/YourRepositoryName/raw/main/SteamRedirect.user.js)
 
 ### Instructions
 1. Click the **Install User Script** button above.
-2. Tampermonkey or Greasemonkey will open with an option to install the script.
+2. Tampermonkey, Greasemonkey, or Violentmonkey will open with an option to install the script.
 3. Confirm the installation, and the script will be ready to use on Steam Workshop pages.
 
 
