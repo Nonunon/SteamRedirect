@@ -61,7 +61,7 @@ To use this project, you’ll need one of the following user script managers ins
 2. Tampermonkey, Greasemonkey, or Violentmonkey will open with an option to install the script.
 3. Confirm the installation, and the script will be ready to use on Steam Workshop pages.
 
-[![Install this script](https://img.shields.io/badge/Install%20User%20Script-green?style=for-the-badge)](https://github.com/YourUsername/YourRepositoryName/raw/main/SteamRedirect.user.js)
+[![Install this script](https://img.shields.io/badge/Install%20User%20Script-green?style=for-the-badge)](https://raw.githubusercontent.com/Nonunon/SteamRedirect/refs/heads/main/SteamRedirect.user.js)
 
 ## License
 
