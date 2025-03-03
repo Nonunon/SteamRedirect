@@ -14,7 +14,7 @@ SteamRedirect is a project designed to redirect specific links seamlessly, espec
 To redirect, use the following format:
 
 ```
-https://nonunon.github.io/SteamRedirect/?id=[WORKSHOP_ID]
+https://steamredirect.hi-nonunon.workers.dev/?id=[WORKSHOP_ID]
 ```
 
 Replace `[WORKSHOP_ID]` with the relevant Steam Workshop ID to generate the link.
