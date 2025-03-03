@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Steam Workshop Redirect Button
-// @namespace    https://nonunon.github.io/SteamRedirect
-// @version      1.2
+// @namespace    https://steamredirect.hi-nonunon.workers.dev
+// @version      1.3
 // @description  Adds a button to redirect Steam Workshop links to the custom SteamRedirect page
 // @match        *://steamcommunity.com/sharedfiles/filedetails/?id=*
 // @grant        GM_addStyle
@@ -16,7 +16,7 @@
 
     if (match && match[1]) {
         const workshopId = match[1];
-        const redirectUrl = `https://nonunon.github.io/SteamRedirect/?id=${workshopId}`;
+        const redirectUrl = `https://steamredirect.hi-nonunon.workers.dev/?id=${workshopId}`;
 
         // Create the redirect button
         const button = document.createElement('button');
