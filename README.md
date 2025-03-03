@@ -25,18 +25,17 @@ To easily redirect Steam Workshop links, you can create a bookmarklet by followi
 
 1. **Copy the code below**:
     ```javascript
-javascript:(function() {
-    const url = window.location.href;
-    const match = url.match(/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=(\d+)/);
-    if (match && match[1]) {
-        const workshopId = match[1];
-        const redirectUrl = `https://steamredirect.hi-nonunon.workers.dev/?id=${workshopId}`;
-        window.location.href = redirectUrl;
-    } else {
-        alert("This is not a valid Steam Workshop link.");
-    }
-})();
-
+	javascript:(function() {
+	    const url = window.location.href;
+	    const match = url.match(/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=(\d+)/);
+		    if (match && match[1]) {
+	        const workshopId = match[1];
+	        const redirectUrl = `https://steamredirect.hi-nonunon.workers.dev/?id=${workshopId}`;
+	        window.location.href = redirectUrl;
+	    } else {
+	        alert("This is not a valid Steam Workshop link.");
+	    }
+	})();
     ```
 2. **Open your browser’s bookmarks bar**.
 3. **Create a new bookmark** and paste the code into the **URL** field of the bookmark.
