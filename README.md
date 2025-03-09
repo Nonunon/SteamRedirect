@@ -25,7 +25,7 @@ To easily redirect Steam Workshop links, you can create a bookmarklet by followi
 
 1. **Copy the code below**:
     ```javascript
-	javascript:(function() {
+	(function() {
 	    const url = window.location.href;
 	    const match = url.match(/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=(\d+)/);
 		    if (match && match[1]) {
