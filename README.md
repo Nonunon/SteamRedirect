@@ -3,11 +3,18 @@
 
 SteamRedirect is a project designed to redirect specific links seamlessly, especially for sharing on Discord. By appending a Steam Workshop ID to the URL, users are directed to the corresponding Steam Workshop page, making link management easy and efficient.
 
+## Repository Purpose
+
+This repository serves as a storage location for resources and a hosted version of the script.
+
+Due to the limitations of GitHub Pages and its static hosting nature, it does not handle dynamic redirects directly. Instead, this repository provides the necessary files and configurations for the SteamRedirect service.
+
 ## Features
 
 - **URL Redirection**: Redirects links based on Steam Workshop IDs.
 - **Optimized for Discord**: Tailored for cleaner link handling in Discord channels.
-- **Lightweight & Simple**: Minimal and easy to use
+- **Lightweight & Simple**: Minimal and easy to use.
+- **Supports Unlisted Workshop Files**: Allows sharing of unlisted Steam Workshop files, as long as they are not private or restricted to friends-only visibility.
 
 ## How to Use
 
