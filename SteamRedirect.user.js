@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Steam Workshop Redirect Button
+// @name         SteamRedirect Button
 // @namespace    https://steamredirect.hi-nonunon.workers.dev
 // @version      1.5
 // @description  Adds a button to redirect Steam Workshop links to the custom SteamRedirect page
@@ -19,7 +19,7 @@
         const normalUrl = `https://steamredirect.hi-nonunon.workers.dev/?id=${workshopId}`;
         const fastUrl   = `https://steamredirect.hi-nonunon.workers.dev/?id=${workshopId}&fast`;
 
-        // ── Styles ───────────────────────────────────────────────────────────
+        // Styles 
         GM_addStyle(`
             #sr-wrapper {
                 position: fixed;
@@ -119,11 +119,11 @@
             }
         `);
 
-        // ── Wrapper ──────────────────────────────────────────────────────────
+        // Wrapper 
         const wrapper = document.createElement('div');
         wrapper.id = 'sr-wrapper';
 
-        // ── Main button ──────────────────────────────────────────────────────
+        // Main button 
         const mainBtn = document.createElement('button');
         mainBtn.id = 'sr-main-btn';
         mainBtn.textContent = 'SteamRedirect';
@@ -131,7 +131,7 @@
             window.location.href = normalUrl;
         });
 
-        // ── Dropdown ─────────────────────────────────────────────────────────
+        // Dropdown 
         const dropdown = document.createElement('div');
         dropdown.id = 'sr-dropdown';
 
@@ -190,7 +190,7 @@
         dropdown.appendChild(copyFastItem);
         dropdown.appendChild(feedback);
 
-        // ── Hover logic ──────────────────────────────────────────────────────
+        // Hover logic 
         let hideTimer;
         const showDropdown = () => {
             clearTimeout(hideTimer);
@@ -206,7 +206,7 @@
         wrapper.addEventListener('mouseenter', showDropdown);
         wrapper.addEventListener('mouseleave', hideDropdown);
 
-        // ── Assemble ─────────────────────────────────────────────────────────
+        // Assemble 
         wrapper.appendChild(mainBtn);
         wrapper.appendChild(dropdown);
         document.body.appendChild(wrapper);
