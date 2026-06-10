@@ -18,17 +18,20 @@ Due to the limitations of GitHub Pages and its static hosting nature, it does no
 
 ## How to Use
 
-- To redirect, use the following format:
-
+To redirect, use the following format:
 ```
 https://steamredirect.hi-nonunon.workers.dev/?id=[WORKSHOP_ID]
 ```
 
-- If you are using the `&fast` extension for faster redirections. (1 second instead of 10)
-
+<details>
+<summary>Fast URL</summary>
+	
 ```
 https://steamredirect.hi-nonunon.workers.dev/?id=[WORKSHOP_ID]&fast
 ```
+
+</details>
+
 
 - Replace `[WORKSHOP_ID]` with the relevant Steam Workshop ID to generate the link.
 
@@ -37,19 +40,37 @@ https://steamredirect.hi-nonunon.workers.dev/?id=[WORKSHOP_ID]&fast
 To easily redirect Steam Workshop links, you can create a bookmarklet by following these steps:
 
 1. **Copy the code below**:
-    ```javascript
-	(function() {
-	    const url = window.location.href;
-	    const match = url.match(/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=(\d+)/);
-		    if (match && match[1]) {
-	        const workshopId = match[1];
-	        const redirectUrl = `https://steamredirect.hi-nonunon.workers.dev/?id=${workshopId}`;
-	        window.location.href = redirectUrl;
-	    } else {
-	        alert("This is not a valid Steam Workshop link.");
-	    }
-	})();
-    ```
+```javascript
+    (function() {
+        const url = window.location.href;
+        const match = url.match(/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=(\d+)/);
+        if (match && match[1]) {
+            const workshopId = match[1];
+            const redirectUrl = `https://steamredirect.hi-nonunon.workers.dev/?id=${workshopId}`;
+            window.location.href = redirectUrl;
+        } else {
+            alert("This is not a valid Steam Workshop link.");
+        }
+    })();
+```
+
+<details>
+<summary>Fast URL Bookmarklet</summary>
+
+```javascript
+(function() {
+    const url = window.location.href;
+    const match = url.match(/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=(\d+)/);
+    if (match && match[1]) {
+        window.location.href = `https://steamredirect.hi-nonunon.workers.dev/?id=${match[1]}&fast`;
+    } else {
+        alert("This is not a valid Steam Workshop link.");
+    }
+})();
+```
+
+</details>
+
 2. **Open your browser’s bookmarks bar**.
 3. **Create a new bookmark** and paste the code into the **URL** field of the bookmark.
 4. **Name the bookmark** something memorable, like "SteamRedirect".
