@@ -18,13 +18,19 @@ Due to the limitations of GitHub Pages and its static hosting nature, it does no
 
 ## How to Use
 
-To redirect, use the following format:
+- To redirect, use the following format:
 
 ```
 https://steamredirect.hi-nonunon.workers.dev/?id=[WORKSHOP_ID]
 ```
 
-Replace `[WORKSHOP_ID]` with the relevant Steam Workshop ID to generate the link.
+- If you are using the `&fast` extension for faster redirections. (1 second instead of 10)
+
+```
+https://steamredirect.hi-nonunon.workers.dev/?id=[WORKSHOP_ID]&fast
+```
+
+- Replace `[WORKSHOP_ID]` with the relevant Steam Workshop ID to generate the link.
 
 ## Create Your SteamRedirect Bookmarklet
 
