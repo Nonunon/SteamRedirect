@@ -239,55 +239,80 @@ async function handleStats(env) {
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 	<style>
-		body {
+		html, body {
+			height: 100%;
+			margin: 0;
 			font-family: 'Roboto', sans-serif;
+		}
+		body {
+			display: flex;
+			flex-direction: column;
+			min-height: 100vh;
+			box-sizing: border-box;
 		}
 		.stats-container {
 			max-width: 900px;
-			margin: 40px auto;
+			width: 100%;
+			margin: 0 auto;
 			padding: 20px;
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+			min-height: 0;
+			box-sizing: border-box;
 		}
 		.stats-header {
 			text-align: center;
-			margin-bottom: 30px;
+			margin-bottom: 20px;
+			flex-shrink: 0;
 		}
 		.stats-summary {
 			display: flex;
 			justify-content: space-around;
-			margin-bottom: 40px;
+			margin-bottom: 20px;
 			gap: 20px;
+			flex-shrink: 0;
 		}
 		.stat-card {
 			background: rgba(23, 26, 33, 0.8);
-			padding: 20px;
+			padding: 14px 20px;
 			border-radius: 8px;
 			text-align: center;
 			flex: 1;
 		}
 		.stat-number {
-			font-size: 2.5em;
+			font-size: 2em;
 			font-weight: bold;
 			color: #66c0f4;
 		}
 		.stat-label {
 			color: #c7d5e0;
-			margin-top: 5px;
+			margin-top: 4px;
+			font-size: 0.9em;
+		}
+		.table-wrapper {
+			flex: 1;
+			overflow-y: auto;
+			border-radius: 8px;
+			min-height: 0;
 		}
 		.stats-table {
 			width: 100%;
 			background: rgba(23, 26, 33, 0.8);
-			border-radius: 8px;
-			overflow: hidden;
+			border-collapse: collapse;
 		}
-		.stats-table th {
+		.stats-table thead th {
 			background: #1b2838;
 			color: #c7d5e0;
-			padding: 15px;
+			padding: 12px 15px;
 			text-align: left;
 			font-weight: bold;
+			position: sticky;
+			top: 0;
+			z-index: 1;
 		}
 		.stats-table td {
-			padding: 12px 15px;
+			padding: 10px 15px;
 			border-bottom: 1px solid #2a475e;
 			color: #c7d5e0;
 		}
@@ -307,7 +332,8 @@ async function handleStats(env) {
 		}
 		.back-link {
 			text-align: center;
-			margin-top: 30px;
+			margin-top: 16px;
+			flex-shrink: 0;
 		}
 		.back-link a {
 			color: #66c0f4;
@@ -345,6 +371,7 @@ async function handleStats(env) {
 		</div>
 
 		${allStats.length > 0 ? `
+		<div class="table-wrapper">
 		<table class="stats-table">
 			<thead>
 				<tr>
@@ -365,6 +392,7 @@ async function handleStats(env) {
 				`).join('')}
 			</tbody>
 		</table>
+		</div>
 		` : '<p style="text-align: center; color: #c7d5e0;">No statistics available yet.</p>'}
 
 		<div class="back-link">
