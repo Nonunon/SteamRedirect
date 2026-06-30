@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SteamRedirect Button
 // @namespace    https://steamredirect.hi-nonunon.workers.dev
-// @version      1.6
+// @version      1.7
 // @description  Adds a button to redirect Steam Workshop links to the custom SteamRedirect page
 // @match        *://steamcommunity.com/sharedfiles/filedetails/?id=*
 // @match        *://steamcommunity.com/workshop/filedetails/?id=*
