@@ -4,6 +4,7 @@
 // @version      1.6
 // @description  Adds a button to redirect Steam Workshop links to the custom SteamRedirect page
 // @match        *://steamcommunity.com/sharedfiles/filedetails/?id=*
+// @match        *://steamcommunity.com/workshop/filedetails/?id=*
 // @grant        GM_addStyle
 // @grant        GM_setClipboard
 // ==/UserScript==
@@ -12,7 +13,7 @@
     'use strict';
 
     const url = window.location.href;
-    const match = url.match(/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=(\d+)/);
+    const match = url.match(/steamcommunity\.com\/(?:sharedfiles|workshop)\/filedetails\/\?id=(\d+)/);
 
     if (match && match[1]) {
         const workshopId = match[1];
