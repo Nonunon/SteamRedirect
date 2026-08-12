@@ -315,6 +315,45 @@ body.stats-body {
     color: #8f98a0;
 }
 
+/* Shared pill-button style for the two cross-page nav links (landing ->
+   stats, stats -> landing) so they read as a matched pair rather than two
+   one-off designs. */
+.nav-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: rgba(102, 192, 244, 0.08);
+    border: 1px solid rgba(102, 192, 244, 0.4);
+    border-radius: 6px;
+    color: #66c0f4;
+    text-decoration: none;
+    font-family: 'Roboto', sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.nav-button:hover {
+    background: rgba(102, 192, 244, 0.18);
+    border-color: #66c0f4;
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.nav-button svg {
+    flex-shrink: 0;
+}
+
+/* Landing page's stats link sits in the corner rather than inline, since
+   the .rectangle card is already tightly laid out and this is a secondary
+   action, not part of the main instructional flow. */
+.stats-corner-link {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+}
+
 .game-icon-header {
     width: 34px;
 }
