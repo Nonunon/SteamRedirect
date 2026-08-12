@@ -36,58 +36,97 @@ function renderFooter() {
 	</div>`;
 }
 
-// Steam's vertical "library capsule" (the portrait boxart shown in your
-// Steam library) lives at a predictable CDN URL derived purely from the app
-// ID, so no extra request is needed for the icon itself. Cropped to a small
-// square from the top-center on the CSS side (see .game-icon in styles.css).
-// Chosen over the wide capsule_sm_120 banner, which is mostly logotype and
-// reads as illegible mush once shrunk to icon size (e.g. Terraria's banner
-// crops down to basically just "rrei").
-function gameIconUrl(appId) {
-	return `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/library_600x900_2x.jpg`;
-}
+// Per-game overrides for cases where the default library-capsule crop reads
+// badly — logo-heavy top, awkward framing, etc. Add an appId here any time
+// you spot a bad one in /stats; cheaper than re-tuning the crop logic for
+// everyone every time one specific game looks wrong.
+// NOTE: 105600 (Terraria) is a first guess at a better source (header.jpg,
+// center-cropped) based on the library capsule reading as mostly logotype —
+// unverified against how it actually renders, swap the URL below if it
+// still doesn't read well.
+const GAME_ICON_OVERRIDES = {
+	105600: `https://cdn.akamai.steamstatic.com/steam/apps/105600/header.jpg`
+};
 
-// Resolve an app ID to a game name via the Steam Store API, with a permanent
-// KV cache (game names don't change, so no TTL on success). Only the NAME
-// needs a network call here — the icon URL above is derived from the ID alone.
-async function getGameName(appId, env, ctx) {
-	if (!appId) return null;
+// Base host for Steam's content-addressed store art. IStoreBrowseService
+// returns asset paths relative to this (see getGameInfo below).
+const STORE_ASSET_BASE = "https://shared.akamai.steamstatic.com/store_item_assets/";
+
+// Resolves both the game's name AND its current library-capsule art in one
+// call, via IStoreBrowseService/GetItems — the same endpoint the Steam
+// client itself uses. This replaced an earlier approach that guessed a
+// fixed CDN path from the app ID alone (cdn.akamai.steamstatic.com/steam/
+// apps/{id}/library_600x900_2x.jpg). That guess only worked for games whose
+// store art hasn't been refreshed recently: Valve has been migrating store
+// assets to content-hashed paths (a hash segment that changes whenever the
+// art updates), and GetItems is the only way to learn the CURRENT hash for
+// a given app — there's no way to derive it from the app ID.
+//
+// Because the hash can change over time (that's the whole point of it),
+// the cached result gets a TTL rather than being permanent like the old
+// name-only cache was — otherwise a game's box art update would eventually
+// leave us serving a permanently 404ing image.
+async function getGameInfo(appId, env, ctx) {
+	if (!appId) return { name: null, iconUrl: null };
 	const cacheKey = `game:${appId}`;
 
 	if (env.WORKSHOP_CACHE) {
 		try {
 			const cached = await env.WORKSHOP_CACHE.get(cacheKey);
 			if (cached) {
-				return JSON.parse(cached).name || null;
+				const parsed = JSON.parse(cached);
+				// Old-format cache entries (from before this rewrite) only ever
+				// stored {name}, with no iconUrl field at all — treat those as a
+				// miss so they get refetched and upgraded to the new format,
+				// rather than permanently returning a null icon.
+				if ("iconUrl" in parsed) {
+					return { name: parsed.name || null, iconUrl: GAME_ICON_OVERRIDES[appId] || parsed.iconUrl || null };
+				}
 			}
 		} catch (error) {
-			console.error("Game name cache read error:", error);
+			console.error("Game info cache read error:", error);
 		}
 	}
 
 	try {
-		const response = await fetch(`https://store.steampowered.com/api/appdetails?appids=${appId}&filters=basic`);
-		if (!response.ok) throw new Error(`Store API returned ${response.status}`);
+		const inputJson = JSON.stringify({
+			ids: [{ appid: Number(appId) }],
+			context: { country_code: "US" },
+			data_request: { include_assets: true }
+		});
+		const response = await fetch(`https://api.steampowered.com/IStoreBrowseService/GetItems/v1/?input_json=${encodeURIComponent(inputJson)}`);
+		if (!response.ok) throw new Error(`GetItems returned ${response.status}`);
 		const json = await response.json();
-		const entry = json[appId];
-		const name = entry && entry.success && entry.data ? entry.data.name : null;
+		const item = json?.response?.store_items?.[0];
+
+		const name = item?.name || null;
+		let iconUrl = null;
+		if (item?.assets?.asset_url_format) {
+			// Prefer the portrait library capsule; fall back to the store header
+			// for apps that don't have one (some don't ship a library capsule).
+			const filename = item.assets.library_capsule_2x || item.assets.library_capsule || item.assets.header;
+			if (filename) {
+				iconUrl = STORE_ASSET_BASE + item.assets.asset_url_format.replace("${FILENAME}", filename);
+			}
+		}
 
 		if (env.WORKSHOP_CACHE) {
 			ctx.waitUntil(
 				env.WORKSHOP_CACHE.put(
 					cacheKey,
-					JSON.stringify({ name }),
-					// Failed lookups (delisted/region-locked apps) get a short TTL so
-					// we retry later. Successful lookups are permanent.
-					name ? {} : { expirationTtl: 3600 }
+					JSON.stringify({ name, iconUrl }),
+					// 7 days: long enough to avoid re-hitting the API on every view,
+					// short enough that a game's art refresh (new hash) heals itself
+					// within a week instead of serving a dead image indefinitely.
+					{ expirationTtl: 604800 }
 				)
 			);
 		}
 
-		return name;
+		return { name, iconUrl: GAME_ICON_OVERRIDES[appId] || iconUrl };
 	} catch (error) {
-		console.error("Game name lookup error:", error);
-		return null;
+		console.error("Game info lookup error:", error);
+		return { name: null, iconUrl: null };
 	}
 }
 
@@ -241,7 +280,9 @@ export default {
 			// the more semantically correct one — e.g. it's the field that would
 			// diverge for editor/tool-published content).
 			const appId = steamData.consumer_app_id || steamData.creator_app_id || null;
-			const gameName = appId ? await getGameName(appId, env, ctx) : null;
+			const { name: gameName, iconUrl: resolvedGameIconUrl } = appId
+				? await getGameInfo(appId, env, ctx)
+				: { name: null, iconUrl: null };
 
 			// Steam Workshop uses 16:9 aspect ratio for thumbnails
 			// Use actual dimensions if provided, otherwise default to 16:9
@@ -263,7 +304,7 @@ export default {
 				steamClientUrl: `steam://url/CommunityFilePage/${workshopId}`,
 				gameId: appId,
 				gameName,
-				gameIconUrl: appId ? gameIconUrl(appId) : null,
+				gameIconUrl: resolvedGameIconUrl,
 				gameStoreUrl: appId ? `https://store.steampowered.com/app/${appId}` : null
 			};
 
