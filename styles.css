@@ -314,3 +314,26 @@ body.stats-body {
     font-size: 0.9em;
     color: #8f98a0;
 }
+
+.game-icon-header {
+    width: 34px;
+}
+
+.game-icon-cell {
+    padding: 6px 4px 6px 12px !important;
+    text-align: center;
+}
+
+.game-icon {
+    display: block;
+    width: 22px;
+    height: 22px;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 4px;
+    transition: transform 0.15s ease;
+}
+
+.game-icon:hover {
+    transform: scale(1.6);
+}

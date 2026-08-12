@@ -36,6 +36,56 @@ function renderFooter() {
 	</div>`;
 }
 
+// Steam's per-game "small capsule" image lives at a predictable CDN URL
+// derived purely from the app ID, so the icon itself never needs a request.
+function gameIconUrl(appId) {
+	return `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/capsule_sm_120.jpg`;
+}
+
+// Resolve an app ID to a game name via the Steam Store API, with a permanent
+// KV cache (game names don't change, so no TTL on success). Only the NAME
+// needs a network call here — the icon URL above is derived from the ID alone.
+async function getGameName(appId, env, ctx) {
+	if (!appId) return null;
+	const cacheKey = `game:${appId}`;
+
+	if (env.WORKSHOP_CACHE) {
+		try {
+			const cached = await env.WORKSHOP_CACHE.get(cacheKey);
+			if (cached) {
+				return JSON.parse(cached).name || null;
+			}
+		} catch (error) {
+			console.error("Game name cache read error:", error);
+		}
+	}
+
+	try {
+		const response = await fetch(`https://store.steampowered.com/api/appdetails?appids=${appId}&filters=basic`);
+		if (!response.ok) throw new Error(`Store API returned ${response.status}`);
+		const json = await response.json();
+		const entry = json[appId];
+		const name = entry && entry.success && entry.data ? entry.data.name : null;
+
+		if (env.WORKSHOP_CACHE) {
+			ctx.waitUntil(
+				env.WORKSHOP_CACHE.put(
+					cacheKey,
+					JSON.stringify({ name }),
+					// Failed lookups (delisted/region-locked apps) get a short TTL so
+					// we retry later. Successful lookups are permanent.
+					name ? {} : { expirationTtl: 3600 }
+				)
+			);
+		}
+
+		return name;
+	} catch (error) {
+		console.error("Game name lookup error:", error);
+		return null;
+	}
+}
+
 export default {
 	async fetch(request, env, ctx) {
 		const url = new URL(request.url);
@@ -181,6 +231,13 @@ export default {
 			const title = steamData.title || "Untitled Workshop Item";
 			const previewUrl = steamData.preview_url || "";
 
+			// Which game this item belongs to. consumer_app_id is the game it's
+			// used IN (creator_app_id is nearly always identical, but consumer is
+			// the more semantically correct one — e.g. it's the field that would
+			// diverge for editor/tool-published content).
+			const appId = steamData.consumer_app_id || steamData.creator_app_id || null;
+			const gameName = appId ? await getGameName(appId, env, ctx) : null;
+
 			// Steam Workshop uses 16:9 aspect ratio for thumbnails
 			// Use actual dimensions if provided, otherwise default to 16:9
 			let imageWidth = steamData.preview_width;
@@ -198,7 +255,11 @@ export default {
 				imageWidth,
 				imageHeight,
 				workshopUrl: `https://steamcommunity.com/sharedfiles/filedetails/?id=${workshopId}`,
-				steamClientUrl: `steam://url/CommunityFilePage/${workshopId}`
+				steamClientUrl: `steam://url/CommunityFilePage/${workshopId}`,
+				gameId: appId,
+				gameName,
+				gameIconUrl: appId ? gameIconUrl(appId) : null,
+				gameStoreUrl: appId ? `https://store.steampowered.com/app/${appId}` : null
 			};
 
 			// Store in KV cache with 7-day TTL
@@ -225,8 +286,17 @@ export default {
 					const currentData = data ? JSON.parse(data) : { count: 0, title: workshopData.title, lastViewed: null };
 					currentData.count += 1;
 					currentData.title = workshopData.title; // Update title in case it changed
+					currentData.gameId = workshopData.gameId;
+					currentData.gameName = workshopData.gameName;
+					currentData.gameIconUrl = workshopData.gameIconUrl;
+					currentData.gameStoreUrl = workshopData.gameStoreUrl;
 					currentData.lastViewed = new Date().toISOString();
-					return env.WORKSHOP_CACHE.put(statsKey, JSON.stringify(currentData), { expirationTtl: 2592000 }); // 30 days
+					// No expirationTtl: this is the permanent lifetime-total record.
+					// (Previously had a 30-day TTL that reset on every view — meaning
+					// only rarely-viewed items would ever silently vanish, and when
+					// they did their whole history went with them, not just a reset
+					// to zero. Dropping it makes every item's total permanent.)
+					return env.WORKSHOP_CACHE.put(statsKey, JSON.stringify(currentData));
 				}).catch(error => {
 					console.error("Analytics tracking error:", error);
 				})
@@ -267,7 +337,10 @@ async function handleStats(env) {
 				title: statsData.title || 'Unknown',
 				count: statsData.count || 0,
 				lastViewed: statsData.lastViewed || 'Never',
-				url: `https://steamcommunity.com/sharedfiles/filedetails/?id=${workshopId}`
+				url: `https://steamcommunity.com/sharedfiles/filedetails/?id=${workshopId}`,
+				gameName: statsData.gameName || null,
+				gameIconUrl: statsData.gameIconUrl || null,
+				gameStoreUrl: statsData.gameStoreUrl || null
 			};
 		});
 
@@ -313,6 +386,7 @@ async function handleStats(env) {
 		<table class="stats-table">
 			<thead>
 				<tr>
+					<th class="game-icon-header" aria-label="Game"></th>
 					<th style="width: 60px;">Rank</th>
 					<th>Workshop Item</th>
 					<th style="width: 100px; text-align: center;">Views</th>
@@ -322,6 +396,7 @@ async function handleStats(env) {
 			<tbody>
 				${allStats.map((item, index) => `
 				<tr>
+					<td class="game-icon-cell">${item.gameIconUrl ? `<a href="${item.gameStoreUrl}" target="_blank" title="${escapeHtml(item.gameName || 'View game on Steam')}"><img src="${item.gameIconUrl}" alt="${escapeHtml(item.gameName || 'Game icon')}" class="game-icon" loading="lazy" onerror="this.parentElement.style.display='none'"></a>` : ''}</td>
 					<td class="rank">#${index + 1}</td>
 					<td><a href="${item.url}" target="_blank">${escapeHtml(item.title)}</a></td>
 					<td style="text-align: center;">${item.count}</td>
