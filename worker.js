@@ -1,12 +1,50 @@
+const ICON_BASE = "https://nonunon.github.io/SteamRedirect";
+
+// Escape HTML to prevent XSS. Hoisted to module scope since both the
+// workshop-redirect page AND the stats page render untrusted Steam titles.
+function escapeHtml(str) {
+	return String(str)
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#039;');
+}
+
+// Shared <head> boilerplate (favicons + stylesheet) that every page uses.
+// `extra` is page-specific head content (og tags, refresh meta, preconnects, etc).
+function renderHead(title, extra = "") {
+	return `<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>${title}</title>
+	<meta name="theme-color" content="#171a21">
+	${extra}
+	<link rel="icon" type="image/png" sizes="32x32" href="${ICON_BASE}/images/SteamRedirect-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="${ICON_BASE}/images/SteamRedirect-16x16.png">
+	<link rel="stylesheet" href="${ICON_BASE}/styles.css">`;
+}
+
+// Shared footer/icon block that every page ends with.
+function renderFooter() {
+	return `<div class="image-section">
+		<a href="https://github.com/Nonunon/SteamRedirect" target="_blank">
+			<img src="${ICON_BASE}/images/SteamRedirect-512x512.png" alt="SteamRedirect Icon">
+		</a>
+	</div>
+	<div class="footer">
+		Created by <a href="https://github.com/Nonunon" target="_blank"><span>Nonunon</span></a>
+	</div>`;
+}
+
 export default {
 	async fetch(request, env, ctx) {
 		const url = new URL(request.url);
-		
+
 		// Handle /stats endpoint
 		if (url.pathname === '/stats') {
 			return handleStats(env);
 		}
-		
+
 		const workshopId = url.searchParams.get("id");
 
 		// Read the ?fast flag
@@ -16,7 +54,7 @@ export default {
 		if (!workshopId) {
 			const landingHTML = generateLandingPage();
 			return new Response(landingHTML, {
-				headers: { 
+				headers: {
 					"Content-Type": "text/html; charset=utf-8",
 					"Cache-Control": "public, max-age=3600"
 				}
@@ -31,7 +69,7 @@ export default {
 		// Simple rate limiting (only for uncached requests to save KV writes)
 		const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
 		const rateLimitKey = `ratelimit:${clientIP}`;
-		
+
 		// Check cache first to avoid rate limiting cached requests
 		let cachedData = null;
 		if (env.WORKSHOP_CACHE) {
@@ -46,16 +84,22 @@ export default {
 			}
 		}
 
+		// If we've already recorded this ID as not-found/private recently,
+		// short-circuit without touching the Steam API or the rate limiter.
+		if (cachedData && cachedData.notFound) {
+			return new Response("Workshop item not found or is private", { status: 404 });
+		}
+
 		// Only rate limit if we need to hit Steam API (not cached)
 		if (!cachedData && env.WORKSHOP_CACHE) {
 			try {
 				const rateData = await env.WORKSHOP_CACHE.get(rateLimitKey);
 				const { count = 0, resetTime = Date.now() } = rateData ? JSON.parse(rateData) : {};
-				
+
 				// Reset counter every hour
 				const now = Date.now();
 				const hourInMs = 3600000;
-				
+
 				if (now > resetTime) {
 					// Hour passed, reset counter
 					ctx.waitUntil(
@@ -83,11 +127,11 @@ export default {
 		} else {
 			// Fetch from Steam API
 			const steamApiUrl = `https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/`;
-			
+
 			const formData = new URLSearchParams();
 			formData.append("itemcount", "1");
 			formData.append("publishedfileids[0]", workshopId);
-			
+
 			let steamData;
 			try {
 				const response = await fetch(steamApiUrl, {
@@ -103,7 +147,7 @@ export default {
 				}
 
 				const json = await response.json();
-				
+
 				// Validate response structure
 				if (!json.response || !json.response.publishedfiledetails || !json.response.publishedfiledetails[0]) {
 					return new Response("Invalid Steam API response", { status: 502 });
@@ -113,6 +157,18 @@ export default {
 
 				// Check if the item exists (result = 1 means success)
 				if (steamData.result !== 1) {
+					// Negative-cache this ID briefly so repeated hits on a bad/private
+					// link don't keep burning Steam API calls (and don't count toward
+					// the requester's rate limit either, matching cached-hit behavior).
+					if (env.WORKSHOP_CACHE) {
+						ctx.waitUntil(
+							env.WORKSHOP_CACHE.put(
+								workshopId,
+								JSON.stringify({ notFound: true }),
+								{ expirationTtl: 300 } // 5 minutes
+							)
+						);
+					}
 					return new Response("Workshop item not found or is private", { status: 404 });
 				}
 
@@ -124,18 +180,18 @@ export default {
 			// Extract and validate data
 			const title = steamData.title || "Untitled Workshop Item";
 			const previewUrl = steamData.preview_url || "";
-			
+
 			// Steam Workshop uses 16:9 aspect ratio for thumbnails
 			// Use actual dimensions if provided, otherwise default to 16:9
 			let imageWidth = steamData.preview_width;
 			let imageHeight = steamData.preview_height;
-			
+
 			// If dimensions aren't provided or are invalid, use 16:9 defaults
 			if (!imageWidth || !imageHeight || imageWidth <= 0 || imageHeight <= 0) {
 				imageWidth = 1280;
 				imageHeight = 720;
 			}
-			
+
 			workshopData = {
 				title,
 				previewUrl,
@@ -150,7 +206,7 @@ export default {
 				try {
 					ctx.waitUntil(
 						env.WORKSHOP_CACHE.put(
-							workshopId, 
+							workshopId,
 							JSON.stringify(workshopData),
 							{ expirationTtl: 604800 } // 7 days
 						)
@@ -181,7 +237,7 @@ export default {
 		const html = generateWorkshopHTML({ ...workshopData, fast });
 
 		return new Response(html, {
-			headers: { 
+			headers: {
 				"Content-Type": "text/html; charset=utf-8",
 				"Cache-Control": "public, max-age=3600" // Browser cache for 1 hour
 			}
@@ -197,15 +253,15 @@ async function handleStats(env) {
 	try {
 		// List all keys with stats: prefix
 		const { keys } = await env.WORKSHOP_CACHE.list({ prefix: 'stats:' });
-		
+
 		// Fetch all stats data
 		const statsPromises = keys.map(async key => {
 			const data = await env.WORKSHOP_CACHE.get(key.name);
 			if (!data) return null;
-			
+
 			const statsData = JSON.parse(data);
 			const workshopId = key.name.replace('stats:', '');
-			
+
 			return {
 				id: workshopId,
 				title: statsData.title || 'Unknown',
@@ -216,145 +272,27 @@ async function handleStats(env) {
 		});
 
 		const allStats = (await Promise.all(statsPromises)).filter(s => s !== null);
-		
+
 		// Sort by view count descending
 		allStats.sort((a, b) => b.count - a.count);
-		
+
 		// Calculate totals
 		const totalViews = allStats.reduce((sum, item) => sum + item.count, 0);
 		const totalItems = allStats.length;
 
 		// Generate HTML
+		// NOTE: item.title comes from Steam and is untrusted — always escape it.
 		const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>SteamRedirect - Statistics</title>
-	<meta name="theme-color" content="#171a21">
-	<link rel="icon" type="image/png" sizes="32x32" href="https://nonunon.github.io/SteamRedirect/images/SteamRedirect-32x32.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="https://nonunon.github.io/SteamRedirect/images/SteamRedirect-16x16.png">
-	<link rel="stylesheet" href="https://nonunon.github.io/SteamRedirect/styles.css">
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-	<style>
-		html, body {
-			height: 100%;
-			margin: 0;
-			font-family: 'Roboto', sans-serif;
-		}
-		body {
-			display: flex;
-			flex-direction: column;
-			min-height: 100vh;
-			box-sizing: border-box;
-		}
-		.stats-container {
-			max-width: 900px;
-			width: 100%;
-			margin: 0 auto;
-			padding: 20px;
-			flex: 1;
-			display: flex;
-			flex-direction: column;
-			min-height: 0;
-			box-sizing: border-box;
-		}
-		.stats-header {
-			text-align: center;
-			margin-bottom: 20px;
-			flex-shrink: 0;
-		}
-		.stats-summary {
-			display: flex;
-			justify-content: space-around;
-			margin-bottom: 20px;
-			gap: 20px;
-			flex-shrink: 0;
-		}
-		.stat-card {
-			background: rgba(23, 26, 33, 0.8);
-			padding: 14px 20px;
-			border-radius: 8px;
-			text-align: center;
-			flex: 1;
-		}
-		.stat-number {
-			font-size: 2em;
-			font-weight: bold;
-			color: #66c0f4;
-		}
-		.stat-label {
-			color: #c7d5e0;
-			margin-top: 4px;
-			font-size: 0.9em;
-		}
-		.table-wrapper {
-			flex: 1;
-			overflow-y: auto;
-			border-radius: 8px;
-			min-height: 0;
-		}
-		.stats-table {
-			width: 100%;
-			background: rgba(23, 26, 33, 0.8);
-			border-collapse: collapse;
-		}
-		.stats-table thead th {
-			background: #1b2838;
-			color: #c7d5e0;
-			padding: 12px 15px;
-			text-align: left;
-			font-weight: bold;
-			position: sticky;
-			top: 0;
-			z-index: 1;
-		}
-		.stats-table td {
-			padding: 10px 15px;
-			border-bottom: 1px solid #2a475e;
-			color: #c7d5e0;
-		}
-		.stats-table tr:hover {
-			background: rgba(102, 192, 244, 0.1);
-		}
-		.stats-table a {
-			color: #66c0f4;
-			text-decoration: none;
-		}
-		.stats-table a:hover {
-			text-decoration: underline;
-		}
-		.rank {
-			font-weight: bold;
-			color: #66c0f4;
-		}
-		.back-link {
-			text-align: center;
-			margin-top: 16px;
-			flex-shrink: 0;
-		}
-		.back-link a {
-			color: #66c0f4;
-			text-decoration: none;
-			font-size: 1.1em;
-		}
-		.back-link a:hover {
-			text-decoration: underline;
-		}
-		.last-viewed {
-			font-size: 0.9em;
-			color: #8f98a0;
-		}
-	</style>
+	${renderHead("SteamRedirect - Statistics")}
 </head>
-<body>
+<body class="stats-body">
 	<div class="stats-container">
 		<div class="stats-header">
 			<div class="title">SteamRedirect Statistics</div>
 		</div>
-		
+
 		<div class="stats-summary">
 			<div class="stat-card">
 				<div class="stat-number">${totalViews.toLocaleString()}</div>
@@ -385,7 +323,7 @@ async function handleStats(env) {
 				${allStats.map((item, index) => `
 				<tr>
 					<td class="rank">#${index + 1}</td>
-					<td><a href="${item.url}" target="_blank">${item.title}</a></td>
+					<td><a href="${item.url}" target="_blank">${escapeHtml(item.title)}</a></td>
 					<td style="text-align: center;">${item.count}</td>
 					<td class="last-viewed">${new Date(item.lastViewed).toLocaleString()}</td>
 				</tr>
@@ -399,20 +337,13 @@ async function handleStats(env) {
 			<a href="/">← Back to SteamRedirect</a>
 		</div>
 	</div>
-	
-	<div class="image-section">
-		<a href="https://github.com/Nonunon/SteamRedirect" target="_blank">
-			<img src="https://nonunon.github.io/SteamRedirect/images/SteamRedirect-512x512.png" alt="SteamRedirect Icon">
-		</a>
-	</div>
-	<div class="footer">
-		Created by <a href="https://github.com/Nonunon" target="_blank"><span>Nonunon</span></a>
-	</div>
+
+	${renderFooter()}
 </body>
 </html>`;
 
 		return new Response(html, {
-			headers: { 
+			headers: {
 				"Content-Type": "text/html; charset=utf-8",
 				"Cache-Control": "public, max-age=300" // Cache for 5 minutes
 			}
@@ -425,25 +356,18 @@ async function handleStats(env) {
 }
 
 function generateLandingPage() {
+	const extraHead = `<meta property="og:type" content="website">
+	<meta property="og:title" content="SteamRedirect - Steam Workshop Link Helper">
+	<meta property="og:description" content="Share Steam Workshop items in Discord with direct client links">
+	<meta property="og:image" content="${ICON_BASE}/images/SteamRedirect-512x512.png">
+	<meta name="twitter:card" content="summary">
+	<link rel="dns-prefetch" href="//steamcommunity.com">
+	<link rel="preconnect" href="https://steamcommunity.com">`;
+
 	return `<!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>SteamRedirect - Steam Workshop Link Helper</title>
-	<meta property="og:type" content="website">
-	<meta property="og:title" content="SteamRedirect - Steam Workshop Link Helper">
-	<meta property="og:description" content="Share Steam Workshop items in Discord with direct client links">
-	<meta property="og:image" content="https://nonunon.github.io/SteamRedirect/images/SteamRedirect-512x512.png">
-	<meta name="twitter:card" content="summary">
-	<meta name="theme-color" content="#171a21">
-	<link rel="dns-prefetch" href="//steamcommunity.com">
-	<link rel="preconnect" href="https://steamcommunity.com">
-	<link rel="dns-prefetch" href="//steamcommunity.com">
-	<link rel="preconnect" href="https://steamcommunity.com">
-	<link rel="icon" type="image/png" sizes="32x32" href="https://nonunon.github.io/SteamRedirect/images/SteamRedirect-32x32.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="https://nonunon.github.io/SteamRedirect/images/SteamRedirect-16x16.png">
-	<link rel="stylesheet" href="https://nonunon.github.io/SteamRedirect/styles.css">
+	${renderHead("SteamRedirect - Steam Workshop Link Helper", extraHead)}
 </head>
 <body>
 	<div class="rectangle">
@@ -471,14 +395,7 @@ function generateLandingPage() {
 			</p>
 		</div>
 	</div>
-	<div class="image-section">
-		<a href="https://github.com/Nonunon/SteamRedirect" target="_blank">
-			<img src="https://nonunon.github.io/SteamRedirect/images/SteamRedirect-512x512.png" alt="SteamRedirect Icon">
-		</a>
-	</div>
-	<div class="footer">
-		Created by <a href="https://github.com/Nonunon" target="_blank"><span>Nonunon</span></a>
-	</div>
+	${renderFooter()}
 </body>
 </html>`;
 }
@@ -486,14 +403,6 @@ function generateLandingPage() {
 function generateWorkshopHTML(data) {
 	// Destructure fast along with the rest
 	const { title, previewUrl, imageWidth, imageHeight, workshopUrl, steamClientUrl, fast } = data;
-	
-	// Escape HTML to prevent XSS
-	const escapeHtml = (str) => str
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&#039;');
 
 	const safeTitle = escapeHtml(title);
 	const safePreviewUrl = escapeHtml(previewUrl);
@@ -505,24 +414,19 @@ function generateWorkshopHTML(data) {
 	// Meta refresh obeys fast mode too
 	const refreshDelay = fast ? 2 : 10;
 
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>SteamRedirect::${safeTitle}</title>
-	<meta property="og:type" content="website">
+	const extraHead = `<meta property="og:type" content="website">
 	<meta property="og:title" content="SteamRedirect::${safeTitle}">
 	<meta property="og:image" content="${safePreviewUrl}">
 	<meta property="og:image:width" content="${ogWidth}">
 	<meta property="og:image:height" content="${ogHeight}">
 	<meta property="og:url" content="${workshopUrl}">
 	<meta name="twitter:card" content="summary_large_image">
-	<meta name="theme-color" content="#171a21">
-	<link rel="icon" type="image/png" sizes="32x32" href="https://nonunon.github.io/SteamRedirect/images/SteamRedirect-32x32.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="https://nonunon.github.io/SteamRedirect/images/SteamRedirect-16x16.png">
-	<meta http-equiv="refresh" content="${refreshDelay};url=${workshopUrl}">
-	<link rel="stylesheet" href="https://nonunon.github.io/SteamRedirect/styles.css">
+	<meta http-equiv="refresh" content="${refreshDelay};url=${workshopUrl}">`;
+
+	return `<!DOCTYPE html>
+<html lang="en">
+<head>
+	${renderHead(`SteamRedirect::${safeTitle}`, extraHead)}
 </head>
 <body>
 	<div class="rectangle">
@@ -547,14 +451,7 @@ function generateWorkshopHTML(data) {
 			</p>
 		</div>
 	</div>
-	<div class="image-section">
-		<a href="https://github.com/Nonunon/SteamRedirect" target="_blank">
-			<img src="https://nonunon.github.io/SteamRedirect/images/SteamRedirect-512x512.png" alt="SteamRedirect Icon">
-		</a>
-	</div>
-	<div class="footer">
-		Created by <a href="https://github.com/Nonunon" target="_blank"><span>Nonunon</span></a>
-	</div>
+	${renderFooter()}
 	<script>
 		const fast = ${fast ? 'true' : 'false'};
 
