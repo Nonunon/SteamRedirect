@@ -341,33 +341,66 @@ body.stats-body {
 /* Stupidly overengineered hover preview: un-crops the same library capsule
    image the tiny .game-icon is already cropped from — no second image
    fetch needed. position:fixed so it escapes .table-wrapper's overflow
-   clipping instead of getting cut off mid-scroll-region. */
+   clipping instead of getting cut off mid-scroll-region. Sized as a
+   viewport fraction (not a flat px value) so it reads as a real "screen
+   takeover" moment rather than a bigger tooltip. */
 .game-icon-preview {
     position: fixed;
     display: none;
     z-index: 1000;
     pointer-events: none;
+    width: min(360px, 22vw);
     background: #1b2838;
     border: 1px solid #2a475e;
-    border-radius: 8px;
-    padding: 8px;
-    box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.6);
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.7);
 }
 
 .game-icon-preview.visible {
     display: block;
+    animation: game-icon-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes game-icon-pop {
+    from {
+        transform: scale(0.4);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .game-icon-preview img {
     display: block;
-    width: 180px;
-    height: auto;
-    border-radius: 4px;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    border-radius: 6px;
 }
 
 .game-icon-preview-name {
-    margin-top: 6px;
-    font-size: 12px;
+    margin-top: 8px;
+    font-size: 14px;
     color: #c7d5e0;
     text-align: center;
+}
+
+/* Dims and softens everything else on the page while a preview is open, so
+   the enlarged art is the only thing competing for attention. */
+.game-icon-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    pointer-events: none;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.game-icon-backdrop.visible {
+    opacity: 1;
 }

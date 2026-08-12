@@ -418,6 +418,7 @@ async function handleStats(env) {
 		</div>
 	</div>
 
+	<div id="game-icon-backdrop" class="game-icon-backdrop"></div>
 	<div id="game-icon-preview" class="game-icon-preview">
 		<img id="game-icon-preview-img" src="" alt="">
 		<div id="game-icon-preview-name" class="game-icon-preview-name"></div>
@@ -426,11 +427,10 @@ async function handleStats(env) {
 	${renderFooter()}
 	<script>
 		(function() {
+			const backdrop = document.getElementById('game-icon-backdrop');
 			const preview = document.getElementById('game-icon-preview');
 			const previewImg = document.getElementById('game-icon-preview-img');
 			const previewName = document.getElementById('game-icon-preview-name');
-			const PREVIEW_WIDTH = 196; // ~180px image + padding
-			const PREVIEW_HEIGHT = 290; // ~180px * (900/600) + padding + label
 
 			document.querySelectorAll('.game-icon').forEach(icon => {
 				icon.addEventListener('mouseenter', () => {
@@ -438,21 +438,36 @@ async function handleStats(env) {
 					if (!full) return;
 					previewImg.src = full;
 					previewName.textContent = icon.dataset.name || '';
-					preview.classList.add('visible');
+
+					// Mirrors the CSS "width: min(360px, 22vw)" rule so we know the
+					// real box size up front, without needing to measure the DOM
+					// mid-animation (which would fight the pop-in transform).
+					const previewWidth = Math.min(360, window.innerWidth * 0.22);
+					const previewHeight = (previewWidth * 1.5) + 60; // 2:3 image + padding/label
 
 					const rect = icon.getBoundingClientRect();
-					let left = rect.right + 10;
-					if (left + PREVIEW_WIDTH > window.innerWidth) {
-						left = rect.left - PREVIEW_WIDTH - 10;
-					}
-					let top = rect.top - 20;
-					top = Math.max(10, Math.min(top, window.innerHeight - PREVIEW_HEIGHT - 10));
+					const flipLeft = rect.right + 20 + previewWidth > window.innerWidth;
+					let left = flipLeft ? rect.left - previewWidth - 20 : rect.right + 20;
+					let top = Math.max(10, Math.min(rect.top - previewHeight / 3, window.innerHeight - previewHeight - 10));
 
+					// Grow outward from whichever side the icon is on, so the pop-in
+					// animation reads as "expanding from the thing you hovered"
+					// rather than just materializing in place.
+					preview.style.transformOrigin = flipLeft ? 'right center' : 'left center';
 					preview.style.left = left + 'px';
 					preview.style.top = top + 'px';
+
+					// Remove-then-reflow-then-add restarts the CSS animation on every
+					// hover, not just the first time (classList.add alone is a no-op
+					// if the class is already present from a rapid re-hover).
+					preview.classList.remove('visible');
+					void preview.offsetWidth;
+					preview.classList.add('visible');
+					backdrop.classList.add('visible');
 				});
 				icon.addEventListener('mouseleave', () => {
 					preview.classList.remove('visible');
+					backdrop.classList.remove('visible');
 				});
 			});
 		})();
