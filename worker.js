@@ -401,7 +401,7 @@ async function handleStats(env) {
 			<tbody>
 				${allStats.map((item, index) => `
 				<tr>
-					<td class="game-icon-cell">${item.gameIconUrl ? `<a href="${item.gameStoreUrl}" target="_blank" title="${escapeHtml(item.gameName || 'View game on Steam')}"><img src="${item.gameIconUrl}" alt="${escapeHtml(item.gameName || 'Game icon')}" class="game-icon" loading="lazy" onerror="this.parentElement.style.display='none'"></a>` : ''}</td>
+					<td class="game-icon-cell">${item.gameIconUrl ? `<a href="${item.gameStoreUrl}" target="_blank" title="${escapeHtml(item.gameName || 'View game on Steam')}"><img src="${item.gameIconUrl}" alt="${escapeHtml(item.gameName || 'Game icon')}" class="game-icon" loading="lazy" data-full="${item.gameIconUrl}" data-name="${escapeHtml(item.gameName || '')}" onerror="this.parentElement.style.display='none'"></a>` : ''}</td>
 					<td class="rank">#${index + 1}</td>
 					<td><a href="${item.url}" target="_blank">${escapeHtml(item.title)}</a></td>
 					<td style="text-align: center;">${item.count}</td>
@@ -418,7 +418,45 @@ async function handleStats(env) {
 		</div>
 	</div>
 
+	<div id="game-icon-preview" class="game-icon-preview">
+		<img id="game-icon-preview-img" src="" alt="">
+		<div id="game-icon-preview-name" class="game-icon-preview-name"></div>
+	</div>
+
 	${renderFooter()}
+	<script>
+		(function() {
+			const preview = document.getElementById('game-icon-preview');
+			const previewImg = document.getElementById('game-icon-preview-img');
+			const previewName = document.getElementById('game-icon-preview-name');
+			const PREVIEW_WIDTH = 196; // ~180px image + padding
+			const PREVIEW_HEIGHT = 290; // ~180px * (900/600) + padding + label
+
+			document.querySelectorAll('.game-icon').forEach(icon => {
+				icon.addEventListener('mouseenter', () => {
+					const full = icon.dataset.full;
+					if (!full) return;
+					previewImg.src = full;
+					previewName.textContent = icon.dataset.name || '';
+					preview.classList.add('visible');
+
+					const rect = icon.getBoundingClientRect();
+					let left = rect.right + 10;
+					if (left + PREVIEW_WIDTH > window.innerWidth) {
+						left = rect.left - PREVIEW_WIDTH - 10;
+					}
+					let top = rect.top - 20;
+					top = Math.max(10, Math.min(top, window.innerHeight - PREVIEW_HEIGHT - 10));
+
+					preview.style.left = left + 'px';
+					preview.style.top = top + 'px';
+				});
+				icon.addEventListener('mouseleave', () => {
+					preview.classList.remove('visible');
+				});
+			});
+		})();
+	</script>
 </body>
 </html>`;
 

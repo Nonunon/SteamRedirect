@@ -335,5 +335,39 @@ body.stats-body {
 }
 
 .game-icon:hover {
-    transform: scale(1.6);
+    transform: scale(1.15);
+}
+
+/* Stupidly overengineered hover preview: un-crops the same library capsule
+   image the tiny .game-icon is already cropped from — no second image
+   fetch needed. position:fixed so it escapes .table-wrapper's overflow
+   clipping instead of getting cut off mid-scroll-region. */
+.game-icon-preview {
+    position: fixed;
+    display: none;
+    z-index: 1000;
+    pointer-events: none;
+    background: #1b2838;
+    border: 1px solid #2a475e;
+    border-radius: 8px;
+    padding: 8px;
+    box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.6);
+}
+
+.game-icon-preview.visible {
+    display: block;
+}
+
+.game-icon-preview img {
+    display: block;
+    width: 180px;
+    height: auto;
+    border-radius: 4px;
+}
+
+.game-icon-preview-name {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #c7d5e0;
+    text-align: center;
 }
