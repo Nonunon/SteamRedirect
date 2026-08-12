@@ -6,9 +6,7 @@
     font-style: normal;
 }
 
-/* wght@400;700 — the 700 weight is needed for the /stats page's bold
-   numbers/headers now that those styles live here instead of an inline
-   <style> block with its own separate font <link> tags. */
+/* 700 weight needed for the /stats page's bold numbers */
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
 /* General body styling with a gradient background */
@@ -166,25 +164,8 @@ body {
     border-radius: 3px;
 }
 
-/* ===================================================================
-   /stats page
-   Previously an inline <style> block duplicated inside worker.js's
-   handleStats() template literal. Moved here so it's cacheable by the
-   browser (via the shared stylesheet link) and editable without touching
-   the Worker source.
-=================================================================== */
+/* /stats page — moved out of an inline <style> block in worker.js */
 
-/* The stats page uses a plain flex column layout instead of the
-   centered-.rectangle layout the other pages use, so it opts out of the
-   default body centering with its own class. */
-/* Fixed to the viewport (not height:auto) so the flex children below
-   have a real bound to negotiate space within. Without this, .table-wrapper's
-   flex:1 has nothing to flex against, so it just grows with its content —
-   which pushes the whole *document* taller instead of scrolling internally,
-   and as a side effect breaks .footer/.image-section's position:absolute
-   (those pin to the bottom of the document, not the viewport, once the
-   two stop being the same height). overflow:hidden keeps the document
-   itself from ever growing past one screen. */
 body.stats-body {
     display: flex;
     flex-direction: column;
@@ -315,9 +296,7 @@ body.stats-body {
     color: #8f98a0;
 }
 
-/* Shared pill-button style for the two cross-page nav links (landing ->
-   stats, stats -> landing) so they read as a matched pair rather than two
-   one-off designs. */
+/* pairs with landing/stats nav buttons */
 .nav-button {
     display: inline-flex;
     align-items: center;
@@ -345,9 +324,6 @@ body.stats-body {
     flex-shrink: 0;
 }
 
-/* Landing page's stats link sits in the corner rather than inline, since
-   the .rectangle card is already tightly laid out and this is a secondary
-   action, not part of the main instructional flow. */
 .stats-corner-link {
     position: absolute;
     top: 16px;
@@ -377,12 +353,8 @@ body.stats-body {
     transform: scale(1.15);
 }
 
-/* Stupidly overengineered hover preview: un-crops the same library capsule
-   image the tiny .game-icon is already cropped from — no second image
-   fetch needed. position:fixed so it escapes .table-wrapper's overflow
-   clipping instead of getting cut off mid-scroll-region. Sized as a
-   viewport fraction (not a flat px value) so it reads as a real "screen
-   takeover" moment rather than a bigger tooltip. */
+/* full-size hover preview, cropped from the same image as .game-icon.
+   position:fixed so it isn't clipped by .table-wrapper's overflow. */
 .game-icon-preview {
     position: fixed;
     display: none;
@@ -427,8 +399,7 @@ body.stats-body {
     text-align: center;
 }
 
-/* Dims and softens everything else on the page while a preview is open, so
-   the enlarged art is the only thing competing for attention. */
+/* dims the page behind an open hover preview */
 .game-icon-backdrop {
     position: fixed;
     inset: 0;

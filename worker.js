@@ -1,7 +1,6 @@
 const ICON_BASE = "https://nonunon.github.io/SteamRedirect";
 
-// Escape HTML to prevent XSS. Hoisted to module scope since both the
-// workshop-redirect page AND the stats page render untrusted Steam titles.
+// escape untrusted Steam text before dropping it into HTML
 function escapeHtml(str) {
 	return String(str)
 		.replace(/&/g, '&amp;')
@@ -11,8 +10,7 @@ function escapeHtml(str) {
 		.replace(/'/g, '&#039;');
 }
 
-// Shared <head> boilerplate (favicons + stylesheet) that every page uses.
-// `extra` is page-specific head content (og tags, refresh meta, preconnects, etc).
+// shared <head>; extra = page-specific tags
 function renderHead(title, extra = "") {
 	return `<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,7 +22,6 @@ function renderHead(title, extra = "") {
 	<link rel="stylesheet" href="${ICON_BASE}/styles.css">`;
 }
 
-// Shared footer/icon block that every page ends with.
 function renderFooter() {
 	return `<div class="image-section">
 		<a href="https://github.com/Nonunon/SteamRedirect" target="_blank">
@@ -36,36 +33,19 @@ function renderFooter() {
 	</div>`;
 }
 
-// Per-game overrides for cases where the default library-capsule crop reads
-// badly — logo-heavy top, awkward framing, etc. Add an appId here any time
-// you spot a bad one in /stats; cheaper than re-tuning the crop logic for
-// everyone every time one specific game looks wrong.
-// NOTE: 105600 (Terraria) is a first guess at a better source (header.jpg,
-// center-cropped) based on the library capsule reading as mostly logotype —
-// unverified against how it actually renders, swap the URL below if it
-// still doesn't read well.
+// hand-tuned icon overrides for games whose default crop looks bad
+// 105600 = Terraria, library capsule was mostly logo text
 const GAME_ICON_OVERRIDES = {
 	105600: `https://cdn.akamai.steamstatic.com/steam/apps/105600/header.jpg`
 };
 
-// Base host for Steam's content-addressed store art. IStoreBrowseService
-// returns asset paths relative to this (see getGameInfo below).
+// base for Steam's content-hashed asset paths (see getGameInfo)
 const STORE_ASSET_BASE = "https://shared.akamai.steamstatic.com/store_item_assets/";
 
-// Resolves both the game's name AND its current library-capsule art in one
-// call, via IStoreBrowseService/GetItems — the same endpoint the Steam
-// client itself uses. This replaced an earlier approach that guessed a
-// fixed CDN path from the app ID alone (cdn.akamai.steamstatic.com/steam/
-// apps/{id}/library_600x900_2x.jpg). That guess only worked for games whose
-// store art hasn't been refreshed recently: Valve has been migrating store
-// assets to content-hashed paths (a hash segment that changes whenever the
-// art updates), and GetItems is the only way to learn the CURRENT hash for
-// a given app — there's no way to derive it from the app ID.
-//
-// Because the hash can change over time (that's the whole point of it),
-// the cached result gets a TTL rather than being permanent like the old
-// name-only cache was — otherwise a game's box art update would eventually
-// leave us serving a permanently 404ing image.
+// resolves name + current icon art via IStoreBrowseService/GetItems.
+// can't guess the icon URL from appId alone anymore — Steam hashes asset
+// paths and the hash changes when art updates, so this has to ask.
+// cache gets a TTL (not permanent) so an art refresh heals itself.
 async function getGameInfo(appId, env, ctx) {
 	if (!appId) return { name: null, iconUrl: null };
 	const cacheKey = `game:${appId}`;
@@ -75,10 +55,7 @@ async function getGameInfo(appId, env, ctx) {
 			const cached = await env.WORKSHOP_CACHE.get(cacheKey);
 			if (cached) {
 				const parsed = JSON.parse(cached);
-				// Old-format cache entries (from before this rewrite) only ever
-				// stored {name}, with no iconUrl field at all — treat those as a
-				// miss so they get refetched and upgraded to the new format,
-				// rather than permanently returning a null icon.
+				// old cache entries only had {name} — treat as a miss
 				if ("iconUrl" in parsed) {
 					return { name: parsed.name || null, iconUrl: GAME_ICON_OVERRIDES[appId] || parsed.iconUrl || null };
 				}
@@ -102,8 +79,7 @@ async function getGameInfo(appId, env, ctx) {
 		const name = item?.name || null;
 		let iconUrl = null;
 		if (item?.assets?.asset_url_format) {
-			// Prefer the portrait library capsule; fall back to the store header
-			// for apps that don't have one (some don't ship a library capsule).
+			// prefer portrait capsule, fall back to header
 			const filename = item.assets.library_capsule_2x || item.assets.library_capsule || item.assets.header;
 			if (filename) {
 				iconUrl = STORE_ASSET_BASE + item.assets.asset_url_format.replace("${FILENAME}", filename);
@@ -115,10 +91,7 @@ async function getGameInfo(appId, env, ctx) {
 				env.WORKSHOP_CACHE.put(
 					cacheKey,
 					JSON.stringify({ name, iconUrl }),
-					// 7 days: long enough to avoid re-hitting the API on every view,
-					// short enough that a game's art refresh (new hash) heals itself
-					// within a week instead of serving a dead image indefinitely.
-					{ expirationTtl: 604800 }
+					{ expirationTtl: 604800 } // 7d
 				)
 			);
 		}
@@ -134,17 +107,13 @@ export default {
 	async fetch(request, env, ctx) {
 		const url = new URL(request.url);
 
-		// Handle /stats endpoint
 		if (url.pathname === '/stats') {
 			return handleStats(env);
 		}
 
 		const workshopId = url.searchParams.get("id");
-
-		// Read the ?fast flag
 		const fast = url.searchParams.has("fast");
 
-		// If no ID provided, show the landing page with instructions
 		if (!workshopId) {
 			const landingHTML = generateLandingPage();
 			return new Response(landingHTML, {
@@ -155,16 +124,14 @@ export default {
 			});
 		}
 
-		// Validate workshop ID format
 		if (!/^\d+$/.test(workshopId)) {
 			return new Response("Invalid workshop ID format", { status: 400 });
 		}
 
-		// Simple rate limiting (only for uncached requests to save KV writes)
+		// rate limit only applies to uncached requests
 		const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
 		const rateLimitKey = `ratelimit:${clientIP}`;
 
-		// Check cache first to avoid rate limiting cached requests
 		let cachedData = null;
 		if (env.WORKSHOP_CACHE) {
 			try {
@@ -178,39 +145,31 @@ export default {
 			}
 		}
 
-		// If we've already recorded this ID as not-found/private recently,
-		// short-circuit without touching the Steam API or the rate limiter.
+		// negative cache hit — bail before touching Steam or the rate limiter
 		if (cachedData && cachedData.notFound) {
 			return new Response("Workshop item not found or is private", { status: 404 });
 		}
 
-		// Only rate limit if we need to hit Steam API (not cached)
 		if (!cachedData && env.WORKSHOP_CACHE) {
 			try {
 				const rateData = await env.WORKSHOP_CACHE.get(rateLimitKey);
 				const { count = 0, resetTime = Date.now() } = rateData ? JSON.parse(rateData) : {};
-
-				// Reset counter every hour
 				const now = Date.now();
 				const hourInMs = 3600000;
 
 				if (now > resetTime) {
-					// Hour passed, reset counter
 					ctx.waitUntil(
 						env.WORKSHOP_CACHE.put(rateLimitKey, JSON.stringify({ count: 1, resetTime: now + hourInMs }), { expirationTtl: 3600 })
 					);
 				} else if (count >= 50) {
-					// Limit: 50 uncached requests per hour per IP
 					return new Response("Rate limit exceeded. Please try again later.", { status: 429 });
 				} else {
-					// Increment counter
 					ctx.waitUntil(
 						env.WORKSHOP_CACHE.put(rateLimitKey, JSON.stringify({ count: count + 1, resetTime }), { expirationTtl: 3600 })
 					);
 				}
 			} catch (error) {
 				console.error("Rate limit check error:", error);
-				// Continue on error - don't block legitimate requests
 			}
 		}
 
@@ -219,7 +178,6 @@ export default {
 		if (cachedData) {
 			workshopData = cachedData;
 		} else {
-			// Fetch from Steam API
 			const steamApiUrl = `https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/`;
 
 			const formData = new URLSearchParams();
@@ -242,24 +200,20 @@ export default {
 
 				const json = await response.json();
 
-				// Validate response structure
 				if (!json.response || !json.response.publishedfiledetails || !json.response.publishedfiledetails[0]) {
 					return new Response("Invalid Steam API response", { status: 502 });
 				}
 
 				steamData = json.response.publishedfiledetails[0];
 
-				// Check if the item exists (result = 1 means success)
 				if (steamData.result !== 1) {
-					// Negative-cache this ID briefly so repeated hits on a bad/private
-					// link don't keep burning Steam API calls (and don't count toward
-					// the requester's rate limit either, matching cached-hit behavior).
+					// negative cache so repeat hits on a bad link skip the API
 					if (env.WORKSHOP_CACHE) {
 						ctx.waitUntil(
 							env.WORKSHOP_CACHE.put(
 								workshopId,
 								JSON.stringify({ notFound: true }),
-								{ expirationTtl: 300 } // 5 minutes
+								{ expirationTtl: 300 }
 							)
 						);
 					}
@@ -271,25 +225,19 @@ export default {
 				return new Response("Failed to fetch Steam data: " + error.message, { status: 500 });
 			}
 
-			// Extract and validate data
 			const title = steamData.title || "Untitled Workshop Item";
 			const previewUrl = steamData.preview_url || "";
 
-			// Which game this item belongs to. consumer_app_id is the game it's
-			// used IN (creator_app_id is nearly always identical, but consumer is
-			// the more semantically correct one — e.g. it's the field that would
-			// diverge for editor/tool-published content).
+			// consumer_app_id = the game this item is used in
 			const appId = steamData.consumer_app_id || steamData.creator_app_id || null;
 			const { name: gameName, iconUrl: resolvedGameIconUrl } = appId
 				? await getGameInfo(appId, env, ctx)
 				: { name: null, iconUrl: null };
 
-			// Steam Workshop uses 16:9 aspect ratio for thumbnails
-			// Use actual dimensions if provided, otherwise default to 16:9
 			let imageWidth = steamData.preview_width;
 			let imageHeight = steamData.preview_height;
 
-			// If dimensions aren't provided or are invalid, use 16:9 defaults
+			// default to 16:9 if Steam didn't provide real dimensions
 			if (!imageWidth || !imageHeight || imageWidth <= 0 || imageHeight <= 0) {
 				imageWidth = 1280;
 				imageHeight = 720;
@@ -308,14 +256,13 @@ export default {
 				gameStoreUrl: appId ? `https://store.steampowered.com/app/${appId}` : null
 			};
 
-			// Store in KV cache with 7-day TTL
 			if (env.WORKSHOP_CACHE) {
 				try {
 					ctx.waitUntil(
 						env.WORKSHOP_CACHE.put(
 							workshopId,
 							JSON.stringify(workshopData),
-							{ expirationTtl: 604800 } // 7 days
+							{ expirationTtl: 604800 } // 7d
 						)
 					);
 				} catch (error) {
@@ -324,24 +271,19 @@ export default {
 			}
 		}
 
-		// Track analytics: increment view counter for this workshop item
 		if (env.WORKSHOP_CACHE) {
 			const statsKey = `stats:${workshopId}`;
 			ctx.waitUntil(
 				env.WORKSHOP_CACHE.get(statsKey).then(data => {
 					const currentData = data ? JSON.parse(data) : { count: 0, title: workshopData.title, lastViewed: null };
 					currentData.count += 1;
-					currentData.title = workshopData.title; // Update title in case it changed
+					currentData.title = workshopData.title;
 					currentData.gameId = workshopData.gameId;
 					currentData.gameName = workshopData.gameName;
 					currentData.gameIconUrl = workshopData.gameIconUrl;
 					currentData.gameStoreUrl = workshopData.gameStoreUrl;
 					currentData.lastViewed = new Date().toISOString();
-					// No expirationTtl: this is the permanent lifetime-total record.
-					// (Previously had a 30-day TTL that reset on every view — meaning
-					// only rarely-viewed items would ever silently vanish, and when
-					// they did their whole history went with them, not just a reset
-					// to zero. Dropping it makes every item's total permanent.)
+					// no TTL: view totals are permanent
 					return env.WORKSHOP_CACHE.put(statsKey, JSON.stringify(currentData));
 				}).catch(error => {
 					console.error("Analytics tracking error:", error);
@@ -349,13 +291,12 @@ export default {
 			);
 		}
 
-		// Pass the fast flag into the HTML generator
 		const html = generateWorkshopHTML({ ...workshopData, fast });
 
 		return new Response(html, {
 			headers: {
 				"Content-Type": "text/html; charset=utf-8",
-				"Cache-Control": "public, max-age=3600" // Browser cache for 1 hour
+				"Cache-Control": "public, max-age=3600"
 			}
 		});
 	}
@@ -367,10 +308,8 @@ async function handleStats(env) {
 	}
 
 	try {
-		// List all keys with stats: prefix
 		const { keys } = await env.WORKSHOP_CACHE.list({ prefix: 'stats:' });
 
-		// Fetch all stats data
 		const statsPromises = keys.map(async key => {
 			const data = await env.WORKSHOP_CACHE.get(key.name);
 			if (!data) return null;
@@ -391,16 +330,12 @@ async function handleStats(env) {
 		});
 
 		const allStats = (await Promise.all(statsPromises)).filter(s => s !== null);
-
-		// Sort by view count descending
 		allStats.sort((a, b) => b.count - a.count);
 
-		// Calculate totals
 		const totalViews = allStats.reduce((sum, item) => sum + item.count, 0);
 		const totalItems = allStats.length;
 
-		// Generate HTML
-		// NOTE: item.title comes from Steam and is untrusted — always escape it.
+		// item.title is untrusted, always escape it
 		const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -480,27 +415,21 @@ async function handleStats(env) {
 					previewImg.src = full;
 					previewName.textContent = icon.dataset.name || '';
 
-					// Mirrors the CSS "width: min(360px, 22vw)" rule so we know the
-					// real box size up front, without needing to measure the DOM
-					// mid-animation (which would fight the pop-in transform).
+					// mirrors the CSS size so we don't measure mid-animation
 					const previewWidth = Math.min(360, window.innerWidth * 0.22);
-					const previewHeight = (previewWidth * 1.5) + 60; // 2:3 image + padding/label
+					const previewHeight = (previewWidth * 1.5) + 60;
 
 					const rect = icon.getBoundingClientRect();
 					const flipLeft = rect.right + 20 + previewWidth > window.innerWidth;
 					let left = flipLeft ? rect.left - previewWidth - 20 : rect.right + 20;
 					let top = Math.max(10, Math.min(rect.top - previewHeight / 3, window.innerHeight - previewHeight - 10));
 
-					// Grow outward from whichever side the icon is on, so the pop-in
-					// animation reads as "expanding from the thing you hovered"
-					// rather than just materializing in place.
+					// grow from whichever side it's anchored to
 					preview.style.transformOrigin = flipLeft ? 'right center' : 'left center';
 					preview.style.left = left + 'px';
 					preview.style.top = top + 'px';
 
-					// Remove-then-reflow-then-add restarts the CSS animation on every
-					// hover, not just the first time (classList.add alone is a no-op
-					// if the class is already present from a rapid re-hover).
+					// force animation restart on rapid re-hover
 					preview.classList.remove('visible');
 					void preview.offsetWidth;
 					preview.classList.add('visible');
@@ -519,7 +448,7 @@ async function handleStats(env) {
 		return new Response(html, {
 			headers: {
 				"Content-Type": "text/html; charset=utf-8",
-				"Cache-Control": "public, max-age=300" // Cache for 5 minutes
+				"Cache-Control": "public, max-age=300"
 			}
 		});
 
@@ -576,17 +505,12 @@ function generateLandingPage() {
 }
 
 function generateWorkshopHTML(data) {
-	// Destructure fast along with the rest
 	const { title, previewUrl, imageWidth, imageHeight, workshopUrl, steamClientUrl, fast } = data;
 
 	const safeTitle = escapeHtml(title);
 	const safePreviewUrl = escapeHtml(previewUrl);
-
-	// Use dimensions from Steam API (with 16:9 fallback already applied)
 	const ogWidth = imageWidth;
 	const ogHeight = imageHeight;
-
-	// Meta refresh obeys fast mode too
 	const refreshDelay = fast ? 2 : 10;
 
 	const extraHead = `<meta property="og:type" content="website">
@@ -630,21 +554,16 @@ function generateWorkshopHTML(data) {
 	<script>
 		const fast = ${fast ? 'true' : 'false'};
 
-		// Fire the Steam client URI.
-		// In fast mode: immediately. Normal mode: after 1 second (gives Discord's
-		// embed scraper time to read the og: tags before we navigate away).
+		// wait 1s in normal mode so Discord can scrape og: tags first
 		setTimeout(() => {
 			window.location.href = "${steamClientUrl}";
 		}, fast ? 0 : 1000);
 
-		// Fallback: if Steam didn't catch the URI, land on the workshop page.
-		// Fast mode gives a 1.5-second window; normal mode gives 10 seconds.
+		// fallback to workshop page if Steam didn't catch the URI
 		setTimeout(() => {
 			window.location.href = "${workshopUrl}";
 		}, fast ? 1500 : 10000);
 
-		// Countdown display (skipped entirely in fast mode — it would flash by too
-		// quickly to be useful anyway).
 		if (!fast) {
 			let countdown = 10;
 			const countdownElement = document.getElementById('countdown');
