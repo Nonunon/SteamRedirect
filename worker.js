@@ -36,10 +36,15 @@ function renderFooter() {
 	</div>`;
 }
 
-// Steam's per-game "small capsule" image lives at a predictable CDN URL
-// derived purely from the app ID, so the icon itself never needs a request.
+// Steam's vertical "library capsule" (the portrait boxart shown in your
+// Steam library) lives at a predictable CDN URL derived purely from the app
+// ID, so no extra request is needed for the icon itself. Cropped to a small
+// square from the top-center on the CSS side (see .game-icon in styles.css).
+// Chosen over the wide capsule_sm_120 banner, which is mostly logotype and
+// reads as illegible mush once shrunk to icon size (e.g. Terraria's banner
+// crops down to basically just "rrei").
 function gameIconUrl(appId) {
-	return `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/capsule_sm_120.jpg`;
+	return `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/library_600x900_2x.jpg`;
 }
 
 // Resolve an app ID to a game name via the Steam Store API, with a permanent

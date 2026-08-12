@@ -329,7 +329,7 @@ body.stats-body {
     width: 22px;
     height: 22px;
     object-fit: cover;
-    object-position: center;
+    object-position: top;
     border-radius: 4px;
     transition: transform 0.15s ease;
 }
