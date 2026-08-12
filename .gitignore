@@ -1,0 +1,4 @@
+.wrangler/
+scripts/
+backfill-bulk-put.json
+wrangler.toml
