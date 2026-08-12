@@ -177,13 +177,21 @@ body {
 /* The stats page uses a plain flex column layout instead of the
    centered-.rectangle layout the other pages use, so it opts out of the
    default body centering with its own class. */
+/* Fixed to the viewport (not height:auto) so the flex children below
+   have a real bound to negotiate space within. Without this, .table-wrapper's
+   flex:1 has nothing to flex against, so it just grows with its content —
+   which pushes the whole *document* taller instead of scrolling internally,
+   and as a side effect breaks .footer/.image-section's position:absolute
+   (those pin to the bottom of the document, not the viewport, once the
+   two stop being the same height). overflow:hidden keeps the document
+   itself from ever growing past one screen. */
 body.stats-body {
     display: flex;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    height: auto;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
     font-family: 'Roboto', sans-serif;
     box-sizing: border-box;
 }
