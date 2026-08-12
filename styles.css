@@ -272,6 +272,10 @@ body.stats-body {
     color: #c7d5e0;
 }
 
+.stats-table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.03);
+}
+
 .stats-table tr:hover {
     background: rgba(102, 192, 244, 0.1);
 }
@@ -287,7 +291,7 @@ body.stats-body {
 
 .rank {
     font-weight: bold;
-    color: #66c0f4;
+    color: #8f98a0;
 }
 
 .back-link {
