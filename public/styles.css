@@ -1,12 +1,8 @@
-/* border-box everywhere: padding and border count INSIDE a declared
-   width/height instead of adding to it. Closes off an entire class of
-   "this box is secretly wider than I said" bugs in one line, rather than
-   fixing them one element at a time as they're discovered. */
+/* border-box everywhere so padding/border don't add to a declared width */
 *, *::before, *::after {
     box-sizing: border-box;
 }
 
-/* Import the custom RimWordFont and Roboto */
 @font-face {
     font-family: 'RimWordFont';
     src: url('fonts/RimWordFont.ttf') format('truetype');
@@ -17,14 +13,12 @@
 /* 700 weight needed for the /stats page's bold numbers */
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
-/* General body styling with a gradient background */
 body {
     margin: 0;
     height: 100vh;
     display: flex;
-    flex-direction: column; /* stacks .rectangle + .converter-box vertically;
-                                without this, body's default row direction
-                                would put them side by side instead */
+    flex-direction: column; /* body's default row direction would put
+                                .rectangle + .converter-box side by side */
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, #1b2838, #1d2b36 60%);
@@ -42,25 +36,13 @@ body {
 .rectangle {
     background-color: #2a2a2a;
     border: 2px solid #3a3a3a;
-    width: 375px; /* content area works out to 375-20-4=351px under
-                        border-box — effectively the same ~350px content
-                        width children actually had before this file used
-                        border-box (where padding sat outside the declared
-                        width instead of inside it) */
-    max-width: calc(100vw - 40px); /* never exceeds the viewport, no media query needed */
-    min-width: 0; /* flex-item safety: without this, a nowrap descendant's
-                     content width can propagate up through body's flex
-                     row and silently stretch the card past its declared width */
+    width: 375px;
+    max-width: calc(100vw - 40px);
+    min-width: 0; /* stops descendant content from stretching the card wider */
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    align-items: stretch; /* every child gets the SAME full card width by
-                              default now, instead of each one computing
-                              its own shrink-to-fit width independently —
-                              that per-child independence was the actual
-                              root cause behind both the card-stretching
-                              and code-box-overflow bugs. centering still
-                              works everywhere via text-align on each child. */
+    align-items: stretch; /* every child gets one consistent width */
     padding: 15px 10px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.6);
     border-radius: 6px;
@@ -73,39 +55,13 @@ body {
     transform: translateY(-2px);
 }
 
-/* the two "snowman" segments shouldn't lift independently — that would
-   visually pull them apart. keep the shadow-deepen feedback, drop the lift. */
-.rectangle.has-converter:hover,
-.rectangle.converter-box:hover {
-    transform: none;
-}
-
-/* fuses .has-converter's bottom edge to .converter-box's top edge into one
-   continuous seam — has-converter's own bottom border IS the seam line, so
-   converter-box grows no top border of its own (avoiding a double line). */
-.rectangle.has-converter {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-    margin-bottom: 0;
-}
-
 .rectangle.converter-box {
-    width: 300px; /* deliberately narrower than the 375px main card —
-                     the mismatched width is what makes this read as a
-                     (cursed, upside-down) snowman rather than one plain
-                     rectangle. centered by body's align-items:center. */
-    border-top: none;
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-    margin-top: 0;
-    animation-delay: 0.08s; /* second segment settles just after the first */
-    transition: width 0.3s ease; /* smooth grow when .expanded is toggled on */
+    width: 300px;
+    margin-top: 16px;
+    animation-delay: 0.08s;
+    transition: width 0.3s ease;
 }
 
-/* Widens once a conversion actually succeeds and there's a real URL to
-   read — 300px was fine for the empty input+toggle+button row, but a full
-   redirect URL wants more room than that. The snowman's head outgrowing
-   its body is a feature, not a bug, at this point. */
 .rectangle.converter-box.expanded {
     width: min(640px, calc(100vw - 40px));
 }
@@ -122,11 +78,8 @@ body {
 }
 
 
-/* Title with custom font and gradient text. Now also a link (back to /)
-   on all three pages, so needs display:block — an <a> defaults to inline,
-   and text-align:center only centers a block-level element's own content. */
 .title {
-    display: block;
+    display: block; /* <a> is inline by default; text-align:center needs block */
     font-family: 'RimWordFont', sans-serif;
     font-size: 24px;
     font-weight: bold;
@@ -214,8 +167,7 @@ body {
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* countdown pulse — stays text-only, just gets a per-tick nudge and a
-   color shift once it's down to the last few seconds */
+/* countdown pulse, text-only */
 #countdown {
     display: inline-block;
     transition: transform 0.15s ease, color 0.15s ease;
@@ -269,7 +221,7 @@ body {
     border-radius: 3px;
 }
 
-/* numbered step list, replaces manual "1. 2. 3." text */
+/* numbered step badges */
 .instructions .steps {
     list-style: none;
     counter-reset: step;
@@ -322,9 +274,7 @@ body {
 
 .converter-input {
     flex: 1 1 auto;
-    min-width: 0; /* same reasoning as .code-row code: lets it shrink
-                     below its own content width instead of pushing the
-                     copy button out of the row */
+    min-width: 0;
     background: rgba(0, 0, 0, 0.25);
     border: 1px solid #444;
     border-radius: 4px;
@@ -356,9 +306,6 @@ body {
     margin-bottom: 10px;
 }
 
-/* the flip-flop toggle: a real sliding switch, not a checkbox. reuses the
-   same green already established for the copy-btn "copied!" state, so
-   on/success reads as one consistent color across the page. */
 .fast-toggle {
     display: inline-flex;
     align-items: center;
@@ -421,21 +368,14 @@ body {
 
 .code-row code {
     flex: 1 1 auto;
-    min-width: 0; /* lets THIS flex item shrink below its own content
-                     width within .code-row's row layout — a distinct,
-                     correct use of the same pattern .rectangle needed;
-                     this one governs code vs. the copy button, not the
-                     card's overall width. */
+    min-width: 0;
     display: block;
     white-space: nowrap;
     overflow-x: auto;
-    overflow-y: hidden; /* explicit, not left to browser inference */
+    overflow-y: hidden;
     padding: 6px 8px;
-    scrollbar-width: thin; /* Firefox: standard property, no vendor prefix.
-                              Firefox ignores ::-webkit-scrollbar entirely,
-                              so without this it falls back to its default
-                              full-size scrollbar regardless of the rules below. */
-    scrollbar-color: rgba(102, 192, 244, 0.4) transparent; /* thumb, track */
+    scrollbar-width: thin; /* Firefox ignores ::-webkit-scrollbar entirely */
+    scrollbar-color: rgba(102, 192, 244, 0.4) transparent;
 }
 
 .code-row code::-webkit-scrollbar {
@@ -476,7 +416,7 @@ body {
     border-color: #4caf82;
 }
 
-/* /stats page — moved out of an inline <style> block in worker.js */
+/* /stats page, moved out of an inline <style> block in worker.js */
 
 body.stats-body {
     display: flex;
@@ -622,8 +562,7 @@ body.stats-body {
     font-family: 'Roboto', sans-serif;
     font-size: 13px;
     font-weight: bold;
-    cursor: pointer; /* .nav-button now also styles a real <button> (Convert),
-                         which doesn't get a pointer cursor for free like <a> does */
+    cursor: pointer; /* also styles a real <button> now, not just <a> */
     transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 

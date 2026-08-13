@@ -1,9 +1,6 @@
-// now served by this same Worker via the [assets] binding in
-// wrangler.toml (public/), not GitHub Pages — empty string + the existing
-// "/images/..." etc paths below resolve relative to the Worker's own origin
+// served from public/ via the assets binding, not GitHub Pages
 const ICON_BASE = "";
 
-// escape untrusted Steam text before dropping it into HTML
 function escapeHtml(str) {
 	return String(str)
 		.replace(/&/g, '&amp;')
@@ -36,16 +33,13 @@ function renderFooter() {
 	</div>`;
 }
 
-// shared between landing + workshop pages, word-for-word
 function renderIntro() {
 	return `<div class="text">
 			This page helps redirect <b><i>Steam Workshop</i></b> links for use in <b><i>Discord</i></b>, where direct linking via <u>steam://</u> is restricted. This should open the <b><i>Steam</i></b> item directly in your Steam client.
 		</div>`;
 }
 
-// shared "How to Use" steps. countdownSeconds: pass a number for the live
-// <span id="countdown"> version (workshop page), omit for static "10 seconds"
-// (landing page, which has nothing actually counting down).
+// countdownSeconds: pass a number for the live workshop-page countdown, omit for the static landing-page text
 function renderInstructions(countdownSeconds = null) {
 	const step6 = countdownSeconds !== null
 		? `<b><span id='countdown'>${countdownSeconds}</span> seconds</b>`
@@ -62,8 +56,7 @@ function renderInstructions(countdownSeconds = null) {
 			</ol>`;
 }
 
-// resolves an app ID to its game name via IStoreBrowseService/GetItems.
-// cached permanently — names don't change.
+// resolves an app ID to its game name via IStoreBrowseService/GetItems, cached permanently
 async function getGameName(appId, env, ctx) {
 	if (!appId) return null;
 	const cacheKey = `game:${appId}`;
@@ -270,9 +263,6 @@ export default {
 					const currentData = data ? JSON.parse(data) : { count: 0, title: workshopData.title, lastViewed: null };
 					currentData.count += 1;
 					currentData.title = workshopData.title;
-					// never let a stale/incomplete workshopData blank out a previously
-					// resolved game name (e.g. from an old cache entry predating this
-					// field) — only overwrite when we actually have something.
 					if (workshopData.gameId) currentData.gameId = workshopData.gameId;
 					if (workshopData.gameName) currentData.gameName = workshopData.gameName;
 					currentData.lastViewed = new Date().toISOString();
@@ -431,7 +421,7 @@ function generateLandingPage(origin) {
 </head>
 <body>
 	<a href="/stats" class="nav-button stats-corner-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>Stats</a>
-	<div class="rectangle has-converter">
+	<div class="rectangle">
 		<a href="/" class="title" id="title">SteamRedirect</a>
 		${renderIntro()}
 		<div class="instructions">
@@ -478,11 +468,10 @@ function generateLandingPage(origin) {
 			});
 		});
 
-		// Accepts a full Workshop URL (with or without other query params), an
-		// already-converted SteamRedirect URL, or a bare numeric ID.
 		function extractWorkshopId(raw) {
 			const trimmed = raw.trim();
 			if (!trimmed) return null;
+			// \\d, not \d — this text is itself inside an outer template literal
 			if (/^\\d+$/.test(trimmed)) return trimmed;
 			const match = trimmed.match(/[?&]id=(\\d+)/);
 			return match ? match[1] : null;
@@ -509,9 +498,7 @@ function generateLandingPage(origin) {
 			converterCopyBtn.hidden = false;
 			converterBox.classList.add('expanded');
 
-			// best-effort auto-copy — if it silently fails (permissions, a
-			// non-secure context, etc) the visible copy button is right there
-			// as a manual fallback, already wired via the shared .copy-btn handler
+			// best-effort auto-copy; the visible button is still a manual fallback
 			navigator.clipboard.writeText(converted).then(() => {
 				converterCopyBtn.classList.add('copied');
 				setTimeout(() => converterCopyBtn.classList.remove('copied'), 1200);
@@ -585,9 +572,8 @@ function generateWorkshopHTML(data) {
 			const countdownInterval = setInterval(() => {
 				countdown--;
 				countdownElement.textContent = countdown;
-				// re-trigger the pulse animation every tick
 				countdownElement.classList.remove('tick');
-				void countdownElement.offsetWidth;
+				void countdownElement.offsetWidth; // forces reflow so the animation replays
 				countdownElement.classList.add('tick');
 				if (countdown <= 3) {
 					countdownElement.classList.add('urgent');
