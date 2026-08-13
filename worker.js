@@ -336,7 +336,7 @@ async function handleStats(env) {
 <body class="stats-body">
 	<div class="stats-container">
 		<div class="stats-header">
-			<div class="title">SteamRedirect Statistics</div>
+			<a href="/" class="title">SteamRedirect Statistics</a>
 		</div>
 
 		<div class="stats-summary">
@@ -432,7 +432,7 @@ function generateLandingPage() {
 <body>
 	<a href="/stats" class="nav-button stats-corner-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>Stats</a>
 	<div class="rectangle">
-		<div class="title" id="title">SteamRedirect</div>
+		<a href="/" class="title" id="title">SteamRedirect</a>
 		${renderIntro()}
 		<div class="instructions">
 			${renderInstructions()}
@@ -491,7 +491,7 @@ function generateWorkshopHTML(data) {
 </head>
 <body>
 	<div class="rectangle">
-		<div class="title" id="title">SteamRedirect</div>
+		<a href="/" class="title" id="title">SteamRedirect</a>
 		${renderIntro()}
 		<div class="link-section" id="link-section">
 			<p>Opening <a href="${workshopUrl}" target="_blank">
