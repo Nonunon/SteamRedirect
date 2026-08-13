@@ -234,8 +234,30 @@ body {
 .code-row {
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 8px;
+}
+
+.code-row code {
+    flex: 1 1 auto;
+    min-width: 0; /* lets it shrink below content width so it scrolls
+                     instead of pushing the copy button out of the card */
+    display: block;
+    white-space: nowrap;
+    overflow-x: auto;
+    padding: 6px 8px;
+}
+
+.code-row code::-webkit-scrollbar {
+    height: 4px;
+}
+
+.code-row code::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.code-row code::-webkit-scrollbar-thumb {
+    background: rgba(102, 192, 244, 0.4);
+    border-radius: 2px;
 }
 
 .copy-btn {
