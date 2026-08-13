@@ -33,73 +33,41 @@ function renderFooter() {
 	</div>`;
 }
 
-// hand-tuned icon overrides for games whose default crop looks bad
-// 105600 = Terraria, library capsule was mostly logo text
-const GAME_ICON_OVERRIDES = {
-	105600: `https://cdn.akamai.steamstatic.com/steam/apps/105600/header.jpg`
-};
-
-// base for Steam's content-hashed asset paths (see getGameInfo)
-const STORE_ASSET_BASE = "https://shared.akamai.steamstatic.com/store_item_assets/";
-
-// resolves name + current icon art via IStoreBrowseService/GetItems.
-// can't guess the icon URL from appId alone anymore — Steam hashes asset
-// paths and the hash changes when art updates, so this has to ask.
-// cache gets a TTL (not permanent) so an art refresh heals itself.
-async function getGameInfo(appId, env, ctx) {
-	if (!appId) return { name: null, iconUrl: null };
+// resolves an app ID to its game name via IStoreBrowseService/GetItems.
+// cached permanently — names don't change.
+async function getGameName(appId, env, ctx) {
+	if (!appId) return null;
 	const cacheKey = `game:${appId}`;
 
 	if (env.WORKSHOP_CACHE) {
 		try {
 			const cached = await env.WORKSHOP_CACHE.get(cacheKey);
-			if (cached) {
-				const parsed = JSON.parse(cached);
-				// old cache entries only had {name} — treat as a miss
-				if ("iconUrl" in parsed) {
-					return { name: parsed.name || null, iconUrl: GAME_ICON_OVERRIDES[appId] || parsed.iconUrl || null };
-				}
-			}
+			if (cached) return JSON.parse(cached).name || null;
 		} catch (error) {
-			console.error("Game info cache read error:", error);
+			console.error("Game name cache read error:", error);
 		}
 	}
 
 	try {
 		const inputJson = JSON.stringify({
 			ids: [{ appid: Number(appId) }],
-			context: { country_code: "US" },
-			data_request: { include_assets: true }
+			context: { country_code: "US" }
 		});
 		const response = await fetch(`https://api.steampowered.com/IStoreBrowseService/GetItems/v1/?input_json=${encodeURIComponent(inputJson)}`);
 		if (!response.ok) throw new Error(`GetItems returned ${response.status}`);
 		const json = await response.json();
-		const item = json?.response?.store_items?.[0];
-
-		const name = item?.name || null;
-		let iconUrl = null;
-		if (item?.assets?.asset_url_format) {
-			// prefer portrait capsule, fall back to header
-			const filename = item.assets.library_capsule_2x || item.assets.library_capsule || item.assets.header;
-			if (filename) {
-				iconUrl = STORE_ASSET_BASE + item.assets.asset_url_format.replace("${FILENAME}", filename);
-			}
-		}
+		const name = json?.response?.store_items?.[0]?.name || null;
 
 		if (env.WORKSHOP_CACHE) {
 			ctx.waitUntil(
-				env.WORKSHOP_CACHE.put(
-					cacheKey,
-					JSON.stringify({ name, iconUrl }),
-					{ expirationTtl: 604800 } // 7d
-				)
+				env.WORKSHOP_CACHE.put(cacheKey, JSON.stringify({ name }), name ? {} : { expirationTtl: 3600 })
 			);
 		}
 
-		return { name, iconUrl: GAME_ICON_OVERRIDES[appId] || iconUrl };
+		return name;
 	} catch (error) {
-		console.error("Game info lookup error:", error);
-		return { name: null, iconUrl: null };
+		console.error("Game name lookup error:", error);
+		return null;
 	}
 }
 
@@ -230,9 +198,7 @@ export default {
 
 			// consumer_app_id = the game this item is used in
 			const appId = steamData.consumer_app_id || steamData.creator_app_id || null;
-			const { name: gameName, iconUrl: resolvedGameIconUrl } = appId
-				? await getGameInfo(appId, env, ctx)
-				: { name: null, iconUrl: null };
+			const gameName = appId ? await getGameName(appId, env, ctx) : null;
 
 			let imageWidth = steamData.preview_width;
 			let imageHeight = steamData.preview_height;
@@ -251,9 +217,7 @@ export default {
 				workshopUrl: `https://steamcommunity.com/sharedfiles/filedetails/?id=${workshopId}`,
 				steamClientUrl: `steam://url/CommunityFilePage/${workshopId}`,
 				gameId: appId,
-				gameName,
-				gameIconUrl: resolvedGameIconUrl,
-				gameStoreUrl: appId ? `https://store.steampowered.com/app/${appId}` : null
+				gameName
 			};
 
 			if (env.WORKSHOP_CACHE) {
@@ -280,8 +244,6 @@ export default {
 					currentData.title = workshopData.title;
 					currentData.gameId = workshopData.gameId;
 					currentData.gameName = workshopData.gameName;
-					currentData.gameIconUrl = workshopData.gameIconUrl;
-					currentData.gameStoreUrl = workshopData.gameStoreUrl;
 					currentData.lastViewed = new Date().toISOString();
 					// no TTL: view totals are permanent
 					return env.WORKSHOP_CACHE.put(statsKey, JSON.stringify(currentData));
@@ -323,9 +285,7 @@ async function handleStats(env) {
 				count: statsData.count || 0,
 				lastViewed: statsData.lastViewed || 'Never',
 				url: `https://steamcommunity.com/sharedfiles/filedetails/?id=${workshopId}`,
-				gameName: statsData.gameName || null,
-				gameIconUrl: statsData.gameIconUrl || null,
-				gameStoreUrl: statsData.gameStoreUrl || null
+				gameName: statsData.gameName || null
 			};
 		});
 
@@ -334,6 +294,7 @@ async function handleStats(env) {
 
 		const totalViews = allStats.reduce((sum, item) => sum + item.count, 0);
 		const totalItems = allStats.length;
+		const uniqueGames = [...new Set(allStats.map(s => s.gameName).filter(Boolean))].sort();
 
 		// item.title is untrusted, always escape it
 		const html = `<!DOCTYPE html>
@@ -363,11 +324,16 @@ async function handleStats(env) {
 		</div>
 
 		${allStats.length > 0 ? `
+		<div class="stats-filter">
+			<select id="game-filter">
+				<option value="all">All Games</option>
+				${uniqueGames.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('')}
+			</select>
+		</div>
 		<div class="table-wrapper">
 		<table class="stats-table">
 			<thead>
 				<tr>
-					<th class="game-icon-header" aria-label="Game"></th>
 					<th style="width: 60px;">Rank</th>
 					<th>Workshop Item</th>
 					<th style="width: 100px; text-align: center;">Views</th>
@@ -376,8 +342,7 @@ async function handleStats(env) {
 			</thead>
 			<tbody>
 				${allStats.map((item, index) => `
-				<tr>
-					<td class="game-icon-cell">${item.gameIconUrl ? `<a href="${item.gameStoreUrl}" target="_blank" title="${escapeHtml(item.gameName || 'View game on Steam')}"><img src="${item.gameIconUrl}" alt="${escapeHtml(item.gameName || 'Game icon')}" class="game-icon" loading="lazy" data-full="${item.gameIconUrl}" data-name="${escapeHtml(item.gameName || '')}" onerror="this.parentElement.style.display='none'"></a>` : ''}</td>
+				<tr data-game="${escapeHtml(item.gameName || '')}">
 					<td class="rank">#${index + 1}</td>
 					<td><a href="${item.url}" target="_blank">${escapeHtml(item.title)}</a></td>
 					<td style="text-align: center;">${item.count}</td>
@@ -394,53 +359,14 @@ async function handleStats(env) {
 		</div>
 	</div>
 
-	<div id="game-icon-backdrop" class="game-icon-backdrop"></div>
-	<div id="game-icon-preview" class="game-icon-preview">
-		<img id="game-icon-preview-img" src="" alt="">
-		<div id="game-icon-preview-name" class="game-icon-preview-name"></div>
-	</div>
-
 	${renderFooter()}
 	<script>
-		(function() {
-			const backdrop = document.getElementById('game-icon-backdrop');
-			const preview = document.getElementById('game-icon-preview');
-			const previewImg = document.getElementById('game-icon-preview-img');
-			const previewName = document.getElementById('game-icon-preview-name');
-
-			document.querySelectorAll('.game-icon').forEach(icon => {
-				icon.addEventListener('mouseenter', () => {
-					const full = icon.dataset.full;
-					if (!full) return;
-					previewImg.src = full;
-					previewName.textContent = icon.dataset.name || '';
-
-					// mirrors the CSS size so we don't measure mid-animation
-					const previewWidth = Math.min(360, window.innerWidth * 0.22);
-					const previewHeight = (previewWidth * 1.5) + 60;
-
-					const rect = icon.getBoundingClientRect();
-					const flipLeft = rect.right + 20 + previewWidth > window.innerWidth;
-					let left = flipLeft ? rect.left - previewWidth - 20 : rect.right + 20;
-					let top = Math.max(10, Math.min(rect.top - previewHeight / 3, window.innerHeight - previewHeight - 10));
-
-					// grow from whichever side it's anchored to
-					preview.style.transformOrigin = flipLeft ? 'right center' : 'left center';
-					preview.style.left = left + 'px';
-					preview.style.top = top + 'px';
-
-					// force animation restart on rapid re-hover
-					preview.classList.remove('visible');
-					void preview.offsetWidth;
-					preview.classList.add('visible');
-					backdrop.classList.add('visible');
-				});
-				icon.addEventListener('mouseleave', () => {
-					preview.classList.remove('visible');
-					backdrop.classList.remove('visible');
-				});
+		document.getElementById('game-filter')?.addEventListener('change', (e) => {
+			const selected = e.target.value;
+			document.querySelectorAll('.stats-table tbody tr').forEach(row => {
+				row.style.display = (selected === 'all' || row.dataset.game === selected) ? '' : 'none';
 			});
-		})();
+		});
 	</script>
 </body>
 </html>`;

@@ -330,87 +330,25 @@ body.stats-body {
     right: 16px;
 }
 
-.game-icon-header {
-    width: 34px;
+/* game filter dropdown, above the stats table */
+.stats-filter {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+    flex-shrink: 0;
 }
 
-.game-icon-cell {
-    padding: 6px 4px 6px 12px !important;
-    text-align: center;
-}
-
-.game-icon {
-    display: block;
-    width: 22px;
-    height: 22px;
-    object-fit: cover;
-    object-position: top;
-    border-radius: 4px;
-    transition: transform 0.15s ease;
-}
-
-.game-icon:hover {
-    transform: scale(1.15);
-}
-
-/* full-size hover preview, cropped from the same image as .game-icon.
-   position:fixed so it isn't clipped by .table-wrapper's overflow. */
-.game-icon-preview {
-    position: fixed;
-    display: none;
-    z-index: 1000;
-    pointer-events: none;
-    width: min(360px, 22vw);
-    background: #1b2838;
-    border: 1px solid #2a475e;
-    border-radius: 10px;
-    padding: 12px;
-    box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.7);
-}
-
-.game-icon-preview.visible {
-    display: block;
-    animation: game-icon-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes game-icon-pop {
-    from {
-        transform: scale(0.4);
-        opacity: 0;
-    }
-    to {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-.game-icon-preview img {
-    display: block;
-    width: 100%;
-    aspect-ratio: 2 / 3;
-    object-fit: cover;
-    border-radius: 6px;
-}
-
-.game-icon-preview-name {
-    margin-top: 8px;
-    font-size: 14px;
+.stats-filter select {
+    background: rgba(23, 26, 33, 0.8);
     color: #c7d5e0;
-    text-align: center;
+    border: 1px solid #2a475e;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 13px;
 }
 
-/* dims the page behind an open hover preview */
-.game-icon-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 999;
-    pointer-events: none;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(3px);
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-
-.game-icon-backdrop.visible {
-    opacity: 1;
+.stats-filter select:focus {
+    outline: none;
+    border-color: #66c0f4;
 }
