@@ -32,6 +32,9 @@ body {
     background-color: #2a2a2a;
     border: 2px solid #3a3a3a;
     width: 350px; /* Adjusted width */
+    min-width: 0; /* without this, the nowrap code boxes' full-URL content
+                     width propagates up through body's flex layout and
+                     silently stretches the card past 350px */
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
