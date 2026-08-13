@@ -1,18 +1,36 @@
 // ==UserScript==
 // @name         SteamRedirect Button
 // @namespace    https://steamredirect.hi-nonunon.workers.dev
-// @version      1.8
-// @description  Adds a button to redirect Steam Workshop links to the custom SteamRedirect page, and auto-closes SteamRedirect fast-mode tabs shortly after steam:// fires
+// @version      1.9
+// @description  Adds a button to redirect Steam Workshop links to the custom SteamRedirect page, and auto-closes SteamRedirect fast-mode tabs shortly after steam:// fires (toggleable via the script manager's menu)
 // @match        *://steamcommunity.com/sharedfiles/filedetails/?id=*
 // @match        *://steamcommunity.com/workshop/filedetails/?id=*
 // @match        https://steamredirect.hi-nonunon.workers.dev/*
 // @grant        GM_addStyle
 // @grant        GM_setClipboard
 // @grant        window.close
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        GM_registerMenuCommand
 // ==/UserScript==
 
 (function() {
     'use strict';
+
+    const FAST_CLOSE_KEY = 'sr-fast-close-enabled';
+    // defaults to on so existing behavior doesn't change; anyone who
+    // doesn't want their tab auto-closing can flip it off from the
+    // script manager's menu (right-click the extension icon)
+    const fastCloseEnabled = GM_getValue(FAST_CLOSE_KEY, true);
+
+    GM_registerMenuCommand(
+        fastCloseEnabled ? 'Disable Fast-Close' : 'Enable Fast-Close',
+        () => {
+            GM_setValue(FAST_CLOSE_KEY, !fastCloseEnabled);
+            // label only updates on next page load; that's a normal
+            // limitation of GM_registerMenuCommand, not a bug
+        }
+    );
 
     const hostname = window.location.hostname;
 
@@ -218,6 +236,8 @@
             document.body.appendChild(wrapper);
         }
     } else if (hostname === 'steamredirect.hi-nonunon.workers.dev') {
+        if (!fastCloseEnabled) return;
+
         // No documented safe minimum exists for this — it's an empirical
         // number. 150ms has tested reliably in practice; if steam:// ever
         // starts silently failing to launch, this is too aggressive and

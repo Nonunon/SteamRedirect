@@ -221,6 +221,17 @@ body {
     border-radius: 3px;
 }
 
+.fast-hint {
+    font-size: 11px;
+    color: #8f98a0;
+    margin-top: 10px;
+    line-height: 1.4;
+}
+
+.fast-hint a {
+    color: #66c0f4;
+}
+
 /* numbered step badges */
 .instructions .steps {
     list-style: none;

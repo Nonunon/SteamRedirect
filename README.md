@@ -30,10 +30,14 @@ https://steamredirect.hi-nonunon.workers.dev/?id=[WORKSHOP_ID]
 https://steamredirect.hi-nonunon.workers.dev/?id=[WORKSHOP_ID]&fast
 ```
 
+No countdown, no delay, just an **instant** launch. Pair it with the [SteamRedirect userscript](#install-the-steamredirect-button-for-steam-workshop-pages) and it can even auto-close the tab once Steam picks it up (Tampermonkey and Violentmonkey only, Greasemonkey doesn't support it yet). On by default, but there's a menu toggle if you'd rather it just behave normally.
+
 </details>
 
 
 - Replace `[WORKSHOP_ID]` with the relevant Steam Workshop ID to generate the link.
+
+Want it quicker? *Fast mode* skips the countdown and fires Steam right away, no waiting around.
 
 Prefer not to build the link by hand? [The homepage](https://steamredirect.hi-nonunon.workers.dev/) has a built-in converter. Paste your Workshop link, hit Convert, and it's copied for you.
 
@@ -70,6 +74,8 @@ To easily redirect Steam Workshop links, you can create a bookmarklet by followi
     }
 })();
 ```
+
+Same fast mode, just as a bookmarklet instead of a link.
 
 </details>
 
