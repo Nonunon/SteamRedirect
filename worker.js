@@ -106,7 +106,6 @@ export default {
 				const cached = await env.WORKSHOP_CACHE.get(workshopId);
 				if (cached) {
 					cachedData = JSON.parse(cached);
-					console.log("Serving from KV cache:", workshopId);
 				}
 			} catch (error) {
 				console.error("KV cache read error:", error);
@@ -242,8 +241,11 @@ export default {
 					const currentData = data ? JSON.parse(data) : { count: 0, title: workshopData.title, lastViewed: null };
 					currentData.count += 1;
 					currentData.title = workshopData.title;
-					currentData.gameId = workshopData.gameId;
-					currentData.gameName = workshopData.gameName;
+					// never let a stale/incomplete workshopData blank out a previously
+					// resolved game name (e.g. from an old cache entry predating this
+					// field) — only overwrite when we actually have something.
+					if (workshopData.gameId) currentData.gameId = workshopData.gameId;
+					if (workshopData.gameName) currentData.gameName = workshopData.gameName;
 					currentData.lastViewed = new Date().toISOString();
 					// no TTL: view totals are permanent
 					return env.WORKSHOP_CACHE.put(statsKey, JSON.stringify(currentData));
@@ -326,7 +328,7 @@ async function handleStats(env) {
 		${allStats.length > 0 ? `
 		<div class="stats-filter">
 			<select id="game-filter">
-				<option value="all">All Games</option>
+				<option value="all">All</option>
 				${uniqueGames.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('')}
 			</select>
 		</div>
