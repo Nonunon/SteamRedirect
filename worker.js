@@ -1,4 +1,7 @@
-const ICON_BASE = "https://nonunon.github.io/SteamRedirect";
+// now served by this same Worker via the [assets] binding in
+// wrangler.toml (public/), not GitHub Pages — empty string + the existing
+// "/images/..." etc paths below resolve relative to the Worker's own origin
+const ICON_BASE = "";
 
 // escape untrusted Steam text before dropping it into HTML
 function escapeHtml(str) {
