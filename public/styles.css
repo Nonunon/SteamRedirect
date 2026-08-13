@@ -22,6 +22,9 @@ body {
     margin: 0;
     height: 100vh;
     display: flex;
+    flex-direction: column; /* stacks .rectangle + .converter-box vertically;
+                                without this, body's default row direction
+                                would put them side by side instead */
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, #1b2838, #1d2b36 60%);
@@ -68,6 +71,43 @@ body {
 .rectangle:hover {
     box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.7);
     transform: translateY(-2px);
+}
+
+/* the two "snowman" segments shouldn't lift independently — that would
+   visually pull them apart. keep the shadow-deepen feedback, drop the lift. */
+.rectangle.has-converter:hover,
+.rectangle.converter-box:hover {
+    transform: none;
+}
+
+/* fuses .has-converter's bottom edge to .converter-box's top edge into one
+   continuous seam — has-converter's own bottom border IS the seam line, so
+   converter-box grows no top border of its own (avoiding a double line). */
+.rectangle.has-converter {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    margin-bottom: 0;
+}
+
+.rectangle.converter-box {
+    width: 300px; /* deliberately narrower than the 375px main card —
+                     the mismatched width is what makes this read as a
+                     (cursed, upside-down) snowman rather than one plain
+                     rectangle. centered by body's align-items:center. */
+    border-top: none;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    margin-top: 0;
+    animation-delay: 0.08s; /* second segment settles just after the first */
+    transition: width 0.3s ease; /* smooth grow when .expanded is toggled on */
+}
+
+/* Widens once a conversion actually succeeds and there's a real URL to
+   read — 300px was fine for the empty input+toggle+button row, but a full
+   redirect URL wants more room than that. The snowman's head outgrowing
+   its body is a feature, not a bug, at this point. */
+.rectangle.converter-box.expanded {
+    width: min(640px, calc(100vw - 40px));
 }
 
 @keyframes card-in {
@@ -262,6 +302,116 @@ body {
     justify-content: center;
 }
 
+/* link-converter widget, landing page only */
+.converter-label {
+    font-family: 'Roboto', sans-serif;
+    font-size: 15px;
+    font-weight: bold;
+    color: #dddddd;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.converter-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.converter-input {
+    flex: 1 1 auto;
+    min-width: 0; /* same reasoning as .code-row code: lets it shrink
+                     below its own content width instead of pushing the
+                     copy button out of the row */
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-family: 'Roboto', sans-serif;
+    font-size: 13px;
+    padding: 8px 10px;
+}
+
+.converter-input:focus {
+    outline: none;
+    border-color: #66c0f4;
+}
+
+.converter-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.converter-error {
+    font-family: 'Roboto', sans-serif;
+    font-size: 12px;
+    color: #ff6b6b;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+/* the flip-flop toggle: a real sliding switch, not a checkbox. reuses the
+   same green already established for the copy-btn "copied!" state, so
+   on/success reads as one consistent color across the page. */
+.fast-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    font-family: 'Roboto', sans-serif;
+    font-size: 13px;
+    color: #cccccc;
+}
+
+.fast-toggle input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.fast-toggle-track {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    background: #444;
+    border-radius: 10px;
+    flex-shrink: 0;
+    transition: background 0.2s ease;
+}
+
+.fast-toggle-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: #ccc;
+    border-radius: 50%;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.fast-toggle input:checked + .fast-toggle-track {
+    background: rgba(76, 175, 130, 0.35);
+}
+
+.fast-toggle input:checked + .fast-toggle-track .fast-toggle-thumb {
+    transform: translateX(16px);
+    background: #4caf82;
+}
+
+.fast-toggle input:focus-visible + .fast-toggle-track {
+    outline: 2px solid #66c0f4;
+    outline-offset: 2px;
+}
+
 /* example-URL rows on the landing page, with a copy button */
 .code-row {
     display: flex;
@@ -281,10 +431,15 @@ body {
     overflow-x: auto;
     overflow-y: hidden; /* explicit, not left to browser inference */
     padding: 6px 8px;
+    scrollbar-width: thin; /* Firefox: standard property, no vendor prefix.
+                              Firefox ignores ::-webkit-scrollbar entirely,
+                              so without this it falls back to its default
+                              full-size scrollbar regardless of the rules below. */
+    scrollbar-color: rgba(102, 192, 244, 0.4) transparent; /* thumb, track */
 }
 
 .code-row code::-webkit-scrollbar {
-    height: 4px;
+    height: 3px;
 }
 
 .code-row code::-webkit-scrollbar-track {
@@ -467,6 +622,8 @@ body.stats-body {
     font-family: 'Roboto', sans-serif;
     font-size: 13px;
     font-weight: bold;
+    cursor: pointer; /* .nav-button now also styles a real <button> (Convert),
+                         which doesn't get a pointer cursor for free like <a> does */
     transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 

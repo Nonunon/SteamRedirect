@@ -112,7 +112,7 @@ export default {
 		const fast = url.searchParams.has("fast");
 
 		if (!workshopId) {
-			const landingHTML = generateLandingPage();
+			const landingHTML = generateLandingPage(url.origin);
 			return new Response(landingHTML, {
 				headers: {
 					"Content-Type": "text/html; charset=utf-8",
@@ -415,11 +415,11 @@ async function handleStats(env) {
 	}
 }
 
-function generateLandingPage() {
+function generateLandingPage(origin) {
 	const extraHead = `<meta property="og:type" content="website">
 	<meta property="og:title" content="SteamRedirect - Steam Workshop Link Helper">
 	<meta property="og:description" content="Share Steam Workshop items in Discord with direct client links">
-	<meta property="og:image" content="${ICON_BASE}/images/SteamRedirect-512x512.png">
+	<meta property="og:image" content="${origin}/images/SteamRedirect-512x512.png">
 	<meta name="twitter:card" content="summary">
 	<link rel="dns-prefetch" href="//steamcommunity.com">
 	<link rel="preconnect" href="https://steamcommunity.com">`;
@@ -431,7 +431,7 @@ function generateLandingPage() {
 </head>
 <body>
 	<a href="/stats" class="nav-button stats-corner-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>Stats</a>
-	<div class="rectangle">
+	<div class="rectangle has-converter">
 		<a href="/" class="title" id="title">SteamRedirect</a>
 		${renderIntro()}
 		<div class="instructions">
@@ -448,6 +448,22 @@ function generateLandingPage() {
 			</div>
 		</div>
 	</div>
+	<div class="rectangle converter-box">
+		<div class="converter-label">Convert a Workshop link</div>
+		<div class="converter-input-row">
+			<input type="text" id="converter-input" class="converter-input" placeholder="https://steamcommunity.com/sharedfiles/filedetails/?id=EXAMPLE" autocomplete="off">
+			<button class="copy-btn" id="converter-copy-btn" title="Copy" aria-label="Copy converted URL" hidden><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+		</div>
+		<div class="converter-options">
+			<label class="fast-toggle">
+				<input type="checkbox" id="fast-toggle-input">
+				<span class="fast-toggle-track"><span class="fast-toggle-thumb"></span></span>
+				Fast mode
+			</label>
+			<button type="button" id="convert-btn" class="nav-button">Convert</button>
+		</div>
+		<div id="converter-error" class="converter-error" hidden></div>
+	</div>
 	${renderFooter()}
 	<script>
 		document.querySelectorAll('.copy-btn').forEach(btn => {
@@ -460,6 +476,53 @@ function generateLandingPage() {
 					console.error('Copy failed:', error);
 				}
 			});
+		});
+
+		// Accepts a full Workshop URL (with or without other query params), an
+		// already-converted SteamRedirect URL, or a bare numeric ID.
+		function extractWorkshopId(raw) {
+			const trimmed = raw.trim();
+			if (!trimmed) return null;
+			if (/^\\d+$/.test(trimmed)) return trimmed;
+			const match = trimmed.match(/[?&]id=(\\d+)/);
+			return match ? match[1] : null;
+		}
+
+		const converterInput = document.getElementById('converter-input');
+		const convertBtn = document.getElementById('convert-btn');
+		const converterBox = document.querySelector('.converter-box');
+		const converterError = document.getElementById('converter-error');
+		const converterCopyBtn = document.getElementById('converter-copy-btn');
+		const fastToggle = document.getElementById('fast-toggle-input');
+
+		function runConvert() {
+			const id = extractWorkshopId(converterInput.value);
+			if (!id) {
+				converterError.textContent = "Couldn't find a workshop ID in that. Paste the full Workshop URL or just the numeric ID.";
+				converterError.hidden = false;
+				return;
+			}
+			converterError.hidden = true;
+			const converted = window.location.origin + '/?id=' + id + (fastToggle.checked ? '&fast' : '');
+			converterInput.value = converted;
+			converterCopyBtn.dataset.copy = converted;
+			converterCopyBtn.hidden = false;
+			converterBox.classList.add('expanded');
+
+			// best-effort auto-copy — if it silently fails (permissions, a
+			// non-secure context, etc) the visible copy button is right there
+			// as a manual fallback, already wired via the shared .copy-btn handler
+			navigator.clipboard.writeText(converted).then(() => {
+				converterCopyBtn.classList.add('copied');
+				setTimeout(() => converterCopyBtn.classList.remove('copied'), 1200);
+			}).catch(error => {
+				console.error('Auto-copy failed:', error);
+			});
+		}
+
+		convertBtn.addEventListener('click', runConvert);
+		converterInput.addEventListener('keydown', (e) => {
+			if (e.key === 'Enter') runConvert();
 		});
 	</script>
 </body>
