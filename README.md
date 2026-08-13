@@ -5,9 +5,7 @@ SteamRedirect is a project designed to redirect specific links seamlessly, espec
 
 ## Repository Purpose
 
-This repository serves as a storage location for resources and a hosted version of the script.
-
-Due to the limitations of GitHub Pages and its static hosting nature, it does not handle dynamic redirects directly. Instead, this repository provides the necessary files and configurations for the SteamRedirect service.
+This repository is the source for the SteamRedirect Cloudflare Worker. Redirect logic, styling, and static assets deploy together as one unit via [Wrangler](https://developers.cloudflare.com/workers/wrangler/). It previously used GitHub Pages for the stylesheet and images; that's no longer the case.
 
 ## Features
 
@@ -15,6 +13,8 @@ Due to the limitations of GitHub Pages and its static hosting nature, it does no
 - **Optimized for Discord**: Tailored for cleaner link handling in Discord channels.
 - **Lightweight & Simple**: Minimal and easy to use.
 - **Supports Unlisted Workshop Files**: Allows sharing of unlisted Steam Workshop files, as long as they are not private or restricted to friends-only visibility.
+- **Link Converter**: Paste a full Steam Workshop URL, or just the numeric ID, into the built-in converter on the homepage and get a ready-to-share SteamRedirect link, copied to your clipboard automatically.
+- **Usage Stats**: Visit [/stats](https://steamredirect.hi-nonunon.workers.dev/stats) to see total views, per-item view counts, and which game each linked item belongs to, with a filter to narrow the list down to one game.
 
 ## How to Use
 
@@ -34,6 +34,8 @@ https://steamredirect.hi-nonunon.workers.dev/?id=[WORKSHOP_ID]&fast
 
 
 - Replace `[WORKSHOP_ID]` with the relevant Steam Workshop ID to generate the link.
+
+Prefer not to build the link by hand? [The homepage](https://steamredirect.hi-nonunon.workers.dev/) has a built-in converter. Paste your Workshop link, hit Convert, and it's copied for you.
 
 ## Create Your SteamRedirect Bookmarklet
 
