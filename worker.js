@@ -556,15 +556,17 @@ function generateWorkshopHTML(data) {
 	<script>
 		const fast = ${fast ? 'true' : 'false'};
 
-		// wait 1s in normal mode so Discord can scrape og: tags first
+		// this delay isn't for Discord's scraper (it reads og: tags from the
+		// raw HTML, no JS involved) — it's giving the browser's async steam://
+		// permission check room to resolve before the fallback navigation
+		// below can cancel it mid-flight.
 		setTimeout(() => {
 			window.location.href = "${steamClientUrl}";
 		}, fast ? 0 : 1000);
 
-		// fallback to workshop page if Steam didn't catch the URI
 		setTimeout(() => {
 			window.location.href = "${workshopUrl}";
-		}, fast ? 1500 : 10000);
+		}, fast ? 300 : 10000);
 
 		if (!fast) {
 			let countdown = ${refreshDelay};
