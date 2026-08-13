@@ -238,15 +238,24 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .code-row code {
     flex: 1 1 auto;
     min-width: 0; /* lets it shrink below content width so it scrolls
                      instead of pushing the copy button out of the card */
+    max-width: 100%;
+    box-sizing: border-box; /* padding counts INSIDE the width, not added
+                               on top of it — keeps the box from silently
+                               growing past its allotted flex space */
     display: block;
     white-space: nowrap;
     overflow-x: auto;
+    overflow-y: hidden; /* explicit, not left to browser inference — an
+                           unset overflow-y defaulting to "visible" is what
+                           let text bleed past the box with no scrollbar */
     padding: 6px 8px;
 }
 
