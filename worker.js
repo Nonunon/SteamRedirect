@@ -33,6 +33,32 @@ function renderFooter() {
 	</div>`;
 }
 
+// shared between landing + workshop pages, word-for-word
+function renderIntro() {
+	return `<div class="text">
+			This page helps redirect <b><i>Steam Workshop</i></b> links for use in <b><i>Discord</i></b>, where direct linking via <u>steam://</u> is restricted. This should open the <b><i>Steam</i></b> item directly in your Steam client.
+		</div>`;
+}
+
+// shared "How to Use" steps. countdownSeconds: pass a number for the live
+// <span id="countdown"> version (workshop page), omit for static "10 seconds"
+// (landing page, which has nothing actually counting down).
+function renderInstructions(countdownSeconds = null) {
+	const step6 = countdownSeconds !== null
+		? `<b><span id='countdown'>${countdownSeconds}</span> seconds</b>`
+		: `<b>10 seconds</b>`;
+
+	return `<p><b>How to Use SteamRedirect:</b></p>
+			<ol class="steps">
+				<li>Go to the <i>Steam Workshop</i> item you want to share.</li>
+				<li>Copy the Workshop ID in the URL after <code>?id=</code>.</li>
+				<li>Add it to this page's URL as <code>?id=WORKSHOP_ID</code>.</li>
+				<li>Open the URL in your browser.</li>
+				<li>This page will open the item in your <i>Steam</i> client.</li>
+				<li>If <i>Steam</i> is closed, it will redirect to the Workshop page in ${step6}.</li>
+			</ol>`;
+}
+
 // resolves an app ID to its game name via IStoreBrowseService/GetItems.
 // cached permanently — names don't change.
 async function getGameName(appId, env, ctx) {
@@ -404,30 +430,35 @@ function generateLandingPage() {
 	<a href="/stats" class="nav-button stats-corner-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>Stats</a>
 	<div class="rectangle">
 		<div class="title" id="title">SteamRedirect</div>
-		<div class="text">
-			This page helps redirect <b><i>Steam Workshop</i></b> links for use in <b><i>Discord</i></b>, where direct linking via <u>steam://</u> is restricted. This should open the <b><i>Steam</i></b> item directly in your Steam client.
-		</div>
+		${renderIntro()}
 		<div class="instructions">
-			<p><b>How to Use SteamRedirect:</b></p>
-			<p>
-				1. Go to the <i>Steam Workshop</i> item you want to share. <br>
-				2. Copy the Workshop ID in the URL after <code>?id=</code>. <br>
-				3. Add it to this page's URL as <code>?id=WORKSHOP_ID</code>. <br>
-				4. Open the URL in your browser. <br>
-				5. This page will open the item in your <i>Steam</i> client. <br>
-				6. If <i>Steam</i> is closed, it will redirect to the Workshop page in <b>10 seconds</b>.
-			</p>
+			${renderInstructions()}
 			<p style="margin-top: 20px;"><b>Example:</b></p>
-			<p>
+			<div class="code-row">
 				<code>https://steamredirect.hi-nonunon.workers.dev/?id=123456789</code>
-			</p>
+				<button class="copy-btn" data-copy="https://steamredirect.hi-nonunon.workers.dev/?id=123456789" title="Copy" aria-label="Copy example URL"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+			</div>
 			<p style="margin-top: 20px;"><b>Fast mode</b> (skips the 10-second wait):</p>
-			<p>
+			<div class="code-row">
 				<code>https://steamredirect.hi-nonunon.workers.dev/?id=123456789&fast</code>
-			</p>
+				<button class="copy-btn" data-copy="https://steamredirect.hi-nonunon.workers.dev/?id=123456789&fast" title="Copy" aria-label="Copy fast mode URL"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+			</div>
 		</div>
 	</div>
 	${renderFooter()}
+	<script>
+		document.querySelectorAll('.copy-btn').forEach(btn => {
+			btn.addEventListener('click', async () => {
+				try {
+					await navigator.clipboard.writeText(btn.dataset.copy);
+					btn.classList.add('copied');
+					setTimeout(() => btn.classList.remove('copied'), 1200);
+				} catch (error) {
+					console.error('Copy failed:', error);
+				}
+			});
+		});
+	</script>
 </body>
 </html>`;
 }
@@ -458,24 +489,14 @@ function generateWorkshopHTML(data) {
 <body>
 	<div class="rectangle">
 		<div class="title" id="title">SteamRedirect</div>
-		<div class="text">
-			This page helps redirect <b><i>Steam Workshop</i></b> links for use in <b><i>Discord</i></b>, where direct linking via <u>steam://</u> is restricted. This should open the <b><i>Steam</i></b> item directly in your Steam client.
-		</div>
+		${renderIntro()}
 		<div class="link-section" id="link-section">
 			<p>Opening <a href="${workshopUrl}" target="_blank">
 			<strong>${safeTitle}</strong></a> in Steam...</p>
 			${previewUrl ? `<img src="${safePreviewUrl}" alt="Preview Image" style="max-width: 100%; margin-top: 10px; height: auto;" />` : ''}
 		</div>
 		<div class="instructions">
-			<p><b>How to Use SteamRedirect:</b></p>
-			<p>
-				1. Go to the <i>Steam Workshop</i> item you want to share. <br>
-				2. Copy the Workshop ID in the URL after <code>?id=</code>. <br>
-				3. Add it to this page's URL as <code>?id=WORKSHOP_ID</code>. <br>
-				4. Open the URL in your browser. <br>
-				5. This page will open the item in your <i>Steam</i> client. <br>
-				6. If <i>Steam</i> is closed, it will redirect to the Workshop page in <b><span id='countdown'>${refreshDelay}</span> seconds</b>.
-			</p>
+			${renderInstructions(refreshDelay)}
 		</div>
 	</div>
 	${renderFooter()}
@@ -493,11 +514,18 @@ function generateWorkshopHTML(data) {
 		}, fast ? 1500 : 10000);
 
 		if (!fast) {
-			let countdown = 10;
+			let countdown = ${refreshDelay};
 			const countdownElement = document.getElementById('countdown');
 			const countdownInterval = setInterval(() => {
 				countdown--;
 				countdownElement.textContent = countdown;
+				// re-trigger the pulse animation every tick
+				countdownElement.classList.remove('tick');
+				void countdownElement.offsetWidth;
+				countdownElement.classList.add('tick');
+				if (countdown <= 3) {
+					countdownElement.classList.add('urgent');
+				}
 				if (countdown <= 0) {
 					clearInterval(countdownInterval);
 				}

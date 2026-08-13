@@ -39,6 +39,24 @@ body {
     padding: 15px 10px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.6);
     border-radius: 6px;
+    animation: card-in 0.4s ease-out;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.rectangle:hover {
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.7);
+    transform: translateY(-2px);
+}
+
+@keyframes card-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 
@@ -124,6 +142,21 @@ body {
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
 }
 
+/* countdown pulse — stays text-only, just gets a per-tick nudge and a
+   color shift once it's down to the last few seconds */
+#countdown {
+    display: inline-block;
+    transition: transform 0.15s ease, color 0.15s ease;
+}
+
+#countdown.tick {
+    transform: scale(1.3);
+}
+
+#countdown.urgent {
+    color: #ff6b6b;
+}
+
 
 /* Styles for the new image section in the bottom-right corner */
 .image-section {
@@ -162,6 +195,72 @@ body {
     color: #e0e0e0;
     padding: 2px 4px;
     border-radius: 3px;
+}
+
+/* numbered step list, replaces manual "1. 2. 3." text */
+.instructions .steps {
+    list-style: none;
+    counter-reset: step;
+    margin: 4px 0 0;
+    padding: 0;
+}
+
+.instructions .steps li {
+    counter-increment: step;
+    position: relative;
+    padding: 4px 0 4px 32px;
+    line-height: 1.5;
+}
+
+.instructions .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(102, 192, 244, 0.15);
+    border: 1px solid rgba(102, 192, 244, 0.4);
+    color: #66c0f4;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* example-URL rows on the landing page, with a copy button */
+.code-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.copy-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: rgba(102, 192, 244, 0.08);
+    border: 1px solid rgba(102, 192, 244, 0.4);
+    border-radius: 4px;
+    color: #66c0f4;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.copy-btn:hover {
+    background: rgba(102, 192, 244, 0.18);
+    border-color: #66c0f4;
+}
+
+.copy-btn.copied {
+    color: #4caf82;
+    border-color: #4caf82;
 }
 
 /* /stats page — moved out of an inline <style> block in worker.js */
