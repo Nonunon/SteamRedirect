@@ -13,7 +13,7 @@ function escapeHtml(str) {
 // server-rendered fallback for the /stats "Last Viewed" cell, shown until the
 // client-side script (which knows the visitor's actual timezone) replaces it.
 // Uses UTC explicitly rather than the Worker's local time, since that's not
-// guaranteed to match the visitor's — the label makes the offset honest.
+// guaranteed to match the visitor's; the label makes the offset honest.
 function formatLastViewedFallback(iso) {
 	const d = new Date(iso);
 	if (!iso || isNaN(d)) return 'Never';
@@ -47,7 +47,7 @@ function renderFooter() {
 	</a>`;
 }
 
-// wraps a page's main content in the .rectangle card, with the title floated on top of it
+// wraps content in the .rectangle card, with the title floated on top of it
 function renderCard(innerHtml, extraClass = "") {
 	return `<div class="card">
 		<div class="rectangle${extraClass ? ' ' + extraClass : ''}">
@@ -158,7 +158,7 @@ export default {
 			}
 		}
 
-		// negative cache hit — bail before touching Steam or the rate limiter
+		// negative cache hit: bail before touching Steam or the rate limiter
 		if (cachedData && cachedData.notFound) {
 			return new Response("Workshop item not found or is private", { status: 404 });
 		}
@@ -248,7 +248,6 @@ export default {
 			let imageWidth = steamData.preview_width;
 			let imageHeight = steamData.preview_height;
 
-			// default to 16:9 if Steam didn't provide real dimensions
 			if (!imageWidth || !imageHeight || imageWidth <= 0 || imageHeight <= 0) {
 				imageWidth = 1280;
 				imageHeight = 720;
@@ -345,7 +344,8 @@ async function handleStats(env) {
 		const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
-	${renderHead("SteamRedirect - Statistics")}
+	${renderHead("SteamRedirect - Statistics", `<link rel="stylesheet" href="${ICON_BASE}/vendor/simplebar.min.css">`)}
+	<script src="${ICON_BASE}/vendor/simplebar.min.js" defer></script>
 </head>
 <body class="stats-body">
 	<div class="stats-container">
@@ -426,6 +426,15 @@ async function handleStats(env) {
 			cell.innerHTML = '<span class="lv-date"></span><span class="lv-time"></span>';
 			cell.querySelector('.lv-date').textContent = date;
 			cell.querySelector('.lv-time').textContent = time;
+		});
+
+		// this script runs immediately during parsing, before the deferred
+		// SimpleBar script; DOMContentLoaded always fires after deferred scripts
+		// finish, so waiting for it guarantees window.SimpleBar exists. Scoped to
+		// just this one element, not the page-wide data-simplebar auto-init.
+		document.addEventListener('DOMContentLoaded', () => {
+			const wrapper = document.querySelector('.table-wrapper');
+			if (wrapper && window.SimpleBar) new SimpleBar(wrapper);
 		});
 	</script>
 </body>
@@ -510,7 +519,7 @@ function generateLandingPage(origin) {
 		function extractWorkshopId(raw) {
 			const trimmed = raw.trim();
 			if (!trimmed) return null;
-			// \\d, not \d — this text is itself inside an outer template literal
+			// \\d, not \d: this text is itself inside an outer template literal
 			if (/^\\d+$/.test(trimmed)) return trimmed;
 			const match = trimmed.match(/[?&]id=(\\d+)/);
 			return match ? match[1] : null;
@@ -594,10 +603,10 @@ function generateWorkshopHTML(data) {
 	<script>
 		const fast = ${fast ? 'true' : 'false'};
 
-		// this delay isn't for Discord's scraper (it reads og: tags from the
-		// raw HTML, no JS involved) — it's giving the browser's async steam://
-		// permission check room to resolve before the fallback navigation
-		// below can cancel it mid-flight.
+		// this delay isn't for Discord's scraper (it reads og: tags from the raw
+		// HTML, no JS involved); it gives the browser's async steam:// permission
+		// check room to resolve before the fallback navigation below can cancel
+		// it mid-flight.
 		setTimeout(() => {
 			window.location.href = "${steamClientUrl}";
 		}, fast ? 0 : 1000);

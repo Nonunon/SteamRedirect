@@ -30,7 +30,6 @@ body {
     box-sizing: border-box;
 }
 
-/* Centering container */
 .container {
     padding: 40px;
     display: flex;
@@ -48,7 +47,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    align-items: stretch; /* every child gets one consistent width */
+    align-items: stretch;
     padding: 15px 10px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.6);
     border-radius: 6px;
@@ -179,15 +178,14 @@ body {
     opacity: 0.85;
 }
 
-/* Styles for the new link section */
 .link-section {
     font-family: 'Roboto', sans-serif;
-    font-size: 15px; /* Slightly larger */
-    color: #dddddd; /* Brighter color */
+    font-size: 15px;
+    color: #dddddd;
     font-weight: bold;
     text-align: center;
     margin-top: -10px;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5); /* Subtle drop shadow */
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 .link-section a {
@@ -230,7 +228,7 @@ body {
     padding: 10px 0;
 }
 .instructions p {
-    margin: 0 0 5px; /* Reduce spacing between lines */
+    margin: 0 0 5px;
 }
 .instructions code {
     background-color: #444;
@@ -508,9 +506,34 @@ body.stats-body {
 
 .table-wrapper {
     flex: 1;
+    /* SimpleBar (vendor/simplebar.min.js) takes over scrolling for this
+       element via JS: it moves the content into its own internally-scrolled
+       wrapper, so this element no longer needs to scroll natively itself.
+       overflow-y: auto stays as a plain-CSS fallback for the moment before
+       the deferred script runs, or if it fails to load. */
     overflow-y: auto;
     border-radius: 8px;
     min-height: 0;
+}
+
+/* SimpleBar scrollbar theming, scoped to just this one element: matches the
+   site's blue/navy palette instead of SimpleBar's default black thumb, same
+   accent color already used for the code-row scrollbar and links elsewhere */
+.table-wrapper .simplebar-scrollbar:before {
+    background: #66c0f4;
+    opacity: 0.35;
+}
+
+.table-wrapper .simplebar-scrollbar.simplebar-visible:before {
+    opacity: 0.65;
+}
+
+.table-wrapper .simplebar-track.simplebar-vertical {
+    width: 10px;
+}
+
+.table-wrapper .simplebar-track.simplebar-horizontal {
+    height: 10px;
 }
 
 .stats-table {
@@ -518,7 +541,7 @@ body.stats-body {
     background: rgba(23, 26, 33, 0.8);
     border-collapse: collapse;
     /* fixed layout makes the th widths below binding, instead of the browser
-       expanding columns to fit content — that's what forced the table wider
+       expanding columns to fit content; that's what forced the table wider
        than its wrapper and produced horizontal scroll on narrow screens */
     table-layout: fixed;
 }
@@ -540,7 +563,7 @@ body.stats-body {
     color: #c7d5e0;
 }
 
-/* faint column dividers, subtler than the row borders — enough to separate
+/* faint column dividers, subtler than the row borders: enough to separate
    the mixed data types (rank/title/count/date) without turning into a full grid */
 .stats-table th:not(:last-child),
 .stats-table td:not(:last-child) {
@@ -572,8 +595,8 @@ body.stats-body {
     text-align: center;
 }
 
-/* same treatment as .col-rank above — "Views" was overflowing its column
-   at narrow widths for the same reason: not enough room against full padding */
+/* same treatment as .col-rank above: "Views" was overflowing its column
+   at narrow widths for the same reason, not enough room against full padding */
 .stats-table th.col-views {
     padding-left: 6px;
     padding-right: 6px;
@@ -744,7 +767,7 @@ body.stats-body {
     }
 
     /* ".stats-table thead th" (base rule, above) has higher specificity than a
-       bare ".stats-table th" — matching "thead th" here too is what actually
+       bare ".stats-table th"; matching "thead th" here too is what actually
        lets this padding win on header cells, not just body cells */
     .stats-table thead th,
     .stats-table td {

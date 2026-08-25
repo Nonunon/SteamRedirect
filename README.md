@@ -49,7 +49,7 @@ To easily redirect Steam Workshop links, you can create a bookmarklet by followi
 ```javascript
     (function() {
         const url = window.location.href;
-        const match = url.match(/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=(\d+)/);
+        const match = url.match(/steamcommunity\.com\/(?:sharedfiles|workshop)\/filedetails\/\?id=(\d+)/);
         if (match && match[1]) {
             const workshopId = match[1];
             const redirectUrl = `https://steamredirect.hi-nonunon.workers.dev/?id=${workshopId}`;
@@ -66,7 +66,7 @@ To easily redirect Steam Workshop links, you can create a bookmarklet by followi
 ```javascript
 (function() {
     const url = window.location.href;
-    const match = url.match(/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=(\d+)/);
+    const match = url.match(/steamcommunity\.com\/(?:sharedfiles|workshop)\/filedetails\/\?id=(\d+)/);
     if (match && match[1]) {
         window.location.href = `https://steamredirect.hi-nonunon.workers.dev/?id=${match[1]}&fast`;
     } else {
@@ -103,7 +103,18 @@ To use this project, you’ll need one of the following user script managers ins
 2. Tampermonkey, Greasemonkey, or Violentmonkey will open with an option to install the script.
 3. Confirm the installation, and the script will be ready to use on Steam Workshop pages.
 
+Once installed, visiting a Steam Workshop item page adds a **SteamRedirect** button in the top-right corner. Hover it to open a dropdown with:
+- **Fast Redirect**: jumps straight to fast mode, no countdown.
+- **Copy Redirect Link**: copies the normal SteamRedirect URL to your clipboard.
+- **Copy Fast Redirect Link**: copies the fast-mode URL to your clipboard.
+
+The script also auto-closes fast-mode SteamRedirect tabs shortly after Steam picks up the link (Tampermonkey and Violentmonkey only, same as the Fast URL note above). This is on by default; right-click the script manager's icon to find a menu option to turn it off.
+
 [![Install this script](https://img.shields.io/badge/Install%20User%20Script-green?style=for-the-badge)](https://raw.githubusercontent.com/Nonunon/SteamRedirect/refs/heads/main/SteamRedirect.user.js)
+
+## Credits
+
+The `/stats` page's scrollbar uses [SimpleBar](https://github.com/Grsmto/simplebar) (MIT License), vendored locally under [`public/vendor/`](public/vendor/) rather than pulled from a CDN.
 
 ## License
 
