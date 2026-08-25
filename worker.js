@@ -361,10 +361,10 @@ async function handleStats(env) {
 		<table class="stats-table">
 			<thead>
 				<tr>
-					<th style="width: 60px;">Rank</th>
+					<th style="width: 50px; text-align: center;">Rank</th>
 					<th>Workshop Item</th>
 					<th style="width: 100px; text-align: center;">Views</th>
-					<th style="width: 180px;">Last Viewed</th>
+					<th style="width: 140px;">Last Viewed</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -373,7 +373,7 @@ async function handleStats(env) {
 					<td class="rank">#${index + 1}</td>
 					<td><a href="${item.url}" target="_blank">${escapeHtml(item.title)}</a></td>
 					<td style="text-align: center;">${item.count}</td>
-					<td class="last-viewed">${new Date(item.lastViewed).toLocaleString()}</td>
+					<td class="last-viewed" data-iso="${escapeHtml(item.lastViewed)}"></td>
 				</tr>
 				`).join('')}
 			</tbody>
@@ -393,6 +393,21 @@ async function handleStats(env) {
 			document.querySelectorAll('.stats-table tbody tr').forEach(row => {
 				row.style.display = (selected === 'all' || row.dataset.game === selected) ? '' : 'none';
 			});
+		});
+
+		// formatted here, not server-side, so it reflects the viewer's own timezone
+		document.querySelectorAll('.last-viewed[data-iso]').forEach(cell => {
+			const iso = cell.dataset.iso;
+			const d = new Date(iso);
+			if (!iso || isNaN(d)) {
+				cell.textContent = 'Never';
+				return;
+			}
+			const date = d.toLocaleDateString(undefined, { month: '2-digit', day: '2-digit', year: 'numeric' });
+			const time = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+			cell.innerHTML = '<span class="lv-date"></span><span class="lv-time"></span>';
+			cell.querySelector('.lv-date').textContent = date;
+			cell.querySelector('.lv-time').textContent = time;
 		});
 	</script>
 </body>
