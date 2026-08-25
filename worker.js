@@ -125,7 +125,11 @@ export default {
 		}
 
 		const workshopId = url.searchParams.get("id");
-		const fast = url.searchParams.has("fast");
+		// undocumented: a URL with no "?" before it, like /&fast?id=123, puts
+		// "&fast" literally into the pathname instead of the query string
+		// (there's no real "?" yet for "&" to mean anything), so it needs its
+		// own check here rather than showing up in searchParams
+		const fast = url.searchParams.has("fast") || url.pathname === "/&fast";
 
 		if (!workshopId) {
 			const landingHTML = generateLandingPage(url.origin);
