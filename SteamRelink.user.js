@@ -236,7 +236,7 @@
 
         const params = new URLSearchParams(window.location.search);
         const isRedirectPage = params.has('id');
-        const isFast = params.has('fast');
+        const isFast = params.has('fast') || window.location.pathname === '/&fast';
 
         if (isRedirectPage && isFast) {
             setTimeout(() => {
