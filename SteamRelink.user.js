@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SteamRelink Button
 // @namespace    https://steamre.link
-// @version      2.1
+// @version      2.2
 // @description  Adds a button to redirect Steam Workshop links to the custom SteamRelink page, and auto-closes SteamRelink fast-mode tabs shortly after steam:// fires (toggleable via the script manager's menu)
 // @updateURL    https://raw.githubusercontent.com/Nonunon/SteamRelink/refs/heads/main/SteamRelink.user.js
 // @downloadURL  https://raw.githubusercontent.com/Nonunon/SteamRelink/refs/heads/main/SteamRelink.user.js
