@@ -434,7 +434,23 @@ async function handleStats(env) {
 		// just this one element, not the page-wide data-simplebar auto-init.
 		document.addEventListener('DOMContentLoaded', () => {
 			const wrapper = document.querySelector('.table-wrapper');
-			if (wrapper && window.SimpleBar) new SimpleBar(wrapper);
+			if (!wrapper || !window.SimpleBar) return;
+
+			new SimpleBar(wrapper);
+
+			// the sticky <thead> lives inside SimpleBar's scrolled content, so its
+			// track spans the whole thing including the header row; offset the
+			// track to start below the header instead, so the thumb only ever
+			// covers the body rows it's actually representing
+			const thead = wrapper.querySelector('thead');
+			const track = wrapper.querySelector('.simplebar-track.simplebar-vertical');
+			if (thead && track) {
+				const syncTrackOffset = () => {
+					track.style.top = thead.offsetHeight + 'px';
+				};
+				syncTrackOffset();
+				new ResizeObserver(syncTrackOffset).observe(thead);
+			}
 		});
 	</script>
 </body>

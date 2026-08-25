@@ -618,6 +618,18 @@ body.stats-body {
     width: 118px;
 }
 
+/* reserves a permanent gutter on the right of the last column, wide enough
+   that SimpleBar's 10px-wide thumb track (flush against the wrapper's right
+   edge) always has empty space to sit in instead of overlapping the date/
+   time text. ".stats-table .col-lastviewed" (two classes) outranks both the
+   base ".stats-table td" padding rule and the mobile media query's shorthand
+   ".stats-table thead th, .stats-table td { padding: 8px 6px }" (one class
+   plus elements each), so this survives at every breakpoint without needing
+   its own copy inside the media query. */
+.stats-table .col-lastviewed {
+    padding-right: 16px;
+}
+
 /* same small/gray secondary-label treatment as Rank and Views; "Last Viewed"
    fits on one line comfortably at this size, so it can center over its
    column too instead of hanging left under the wider Workshop Item header */
