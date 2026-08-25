@@ -17,15 +17,12 @@ body {
     margin: 0;
     min-height: 100vh;
     display: flex;
-    flex-direction: column; /* body's default row direction would put
-                                .rectangle + .converter-box side by side */
+    flex-direction: column; /* row would put .rectangle + .converter-box side by side */
     align-items: center;
     justify-content: center;
     gap: 0;
     background: linear-gradient(135deg, #1b2838, #1d2b36 60%);
-    /* fixed 100vh + no scroll used to clip content on short mobile viewports;
-       this lets the page grow and scroll instead, with room for the
-       top-right nav button and bottom-right credit so neither overlaps content */
+    /* padding leaves room for the nav button and credit without overlapping content */
     padding: 56px 16px 48px;
     box-sizing: border-box;
 }
@@ -111,9 +108,8 @@ body {
     opacity: 0.8;
 }
 
-/* on the landing/redirect cards, float the title on top of the .rectangle's edge;
-   on /stats (.title sits directly in the flow, no .card wrapper) it stays static
-   and is free to wrap onto a second line on narrow viewports */
+/* floats the title on the card's edge; scoped to .card so /stats's plain
+   .title (no wrapper) stays in flow and can wrap on narrow viewports */
 .card .title {
     position: absolute;
     top: -14px;
@@ -124,7 +120,6 @@ body {
     filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.7));
 }
 
-/* Text content with justified text and centered last line */
 .text {
     font-family: 'Roboto', sans-serif;
     font-size: 13px;
@@ -136,8 +131,7 @@ body {
     text-align-last: center;
 }
 
-/* Small credit link, anchored to the viewport corner so it never drifts
-   over page content regardless of scroll position or content height. */
+/* fixed to the viewport corner so it never drifts over page content */
 .credit {
     position: fixed;
     bottom: 12px;
@@ -498,34 +492,25 @@ body.stats-body {
 
 .table-wrapper {
     flex: 1;
-    /* SimpleBar (vendor/simplebar.min.js) takes over scrolling for this
-       element via JS: it moves the content into its own internally-scrolled
-       wrapper, so this element no longer needs to scroll natively itself.
-       overflow-y: auto stays as a plain-CSS fallback for the moment before
-       the deferred script runs, or if it fails to load. */
+    /* vendor/simplebar.min.js manages scrolling here via JS; this stays as a
+       plain-CSS fallback for before it loads, or if it fails */
     overflow-y: auto;
     border-radius: 8px;
     min-height: 0;
 }
 
-/* SimpleBar's own .simplebar-wrapper uses height: inherit, which copies the
-   parent's *computed* height value, not its rendered size. A flex item's
-   computed height stays "auto" even though flexbox gives it a real box, so
-   height: inherit silently fails here and the wrapper grows to fit all the
-   content instead of the visible area, which was making the plain overflow-y:
-   auto above kick in on the outer element too, alongside SimpleBar's own
-   internal scrolling: that's what produced the double scrollbar. height:
-   100% resolves against the actual flex-item box instead, which fixes that.
-   (Deliberately not adding overflow: hidden on the host element on top of
-   this: SimpleBar reads that as "never show a scrollbar on this axis" and
-   disables its own thumb entirely, even when content genuinely overflows.) */
+/* SimpleBar's .simplebar-wrapper uses height: inherit, which copies the
+   parent's computed height ("auto" for a flex item, not its real size), so
+   it grew to fit all the content instead of the visible area, and the
+   overflow-y: auto above kicked in too, causing a double scrollbar. height:
+   100% fixes that by resolving against the actual flex-item box.
+   Don't add overflow: hidden on the host itself: SimpleBar reads that as
+   "never show a scrollbar" and disables its thumb even when content overflows. */
 .table-wrapper > .simplebar-wrapper {
     height: 100%;
 }
 
-/* SimpleBar scrollbar theming, scoped to just this one element: matches the
-   site's blue/navy palette instead of SimpleBar's default black thumb, same
-   accent color already used for the code-row scrollbar and links elsewhere */
+/* matches the site's blue/navy palette instead of SimpleBar's default black thumb */
 .table-wrapper .simplebar-scrollbar:before {
     background: #66c0f4;
     opacity: 0.35;
@@ -547,9 +532,8 @@ body.stats-body {
     width: 100%;
     background: rgba(23, 26, 33, 0.8);
     border-collapse: collapse;
-    /* fixed layout makes the th widths below binding, instead of the browser
-       expanding columns to fit content; that's what forced the table wider
-       than its wrapper and produced horizontal scroll on narrow screens */
+    /* fixed makes the th widths below binding, instead of the browser
+       expanding columns to fit content and forcing horizontal scroll */
     table-layout: fixed;
 }
 
@@ -564,9 +548,7 @@ body.stats-body {
     z-index: 1;
 }
 
-/* click-to-sort headers; deliberately no hover treatment or icon until a
-   column is actually sorted, so this stays a "click around and find it"
-   affordance rather than an announced feature */
+/* no hover treatment or icon until sorted, stays a "click around and find it" affordance */
 .stats-table thead th[data-sort] {
     cursor: pointer;
 }
@@ -582,8 +564,7 @@ body.stats-body {
     color: #c7d5e0;
 }
 
-/* faint column dividers, subtler than the row borders: enough to separate
-   the mixed data types (rank/title/count/date) without turning into a full grid */
+/* faint dividers between the mixed data types, without a full grid look */
 .stats-table th:not(:last-child),
 .stats-table td:not(:last-child) {
     border-right: 1px solid rgba(42, 71, 94, 0.5);
@@ -594,11 +575,9 @@ body.stats-body {
     text-align: center;
 }
 
-/* "Rank" was tight enough to truncate to "Ran-" against the header's default
-   padding/size even on desktop; shrinking + graying it also reads better as
-   a secondary label next to "Workshop Item". text-align is repeated here
-   (not just on .col-rank) because ".stats-table thead th" sets it too, with
-   higher specificity (two element selectors) than a single class alone. */
+/* shrinking + graying fixes "Rank" truncating to "Ran-" and reads better as a
+   secondary label. text-align repeated here since ".stats-table thead th"
+   (two elements) outranks a single class like .col-rank alone. */
 .stats-table th.col-rank {
     padding-left: 6px;
     padding-right: 6px;
@@ -614,8 +593,7 @@ body.stats-body {
     text-align: center;
 }
 
-/* same treatment as .col-rank above: "Views" was overflowing its column
-   at narrow widths for the same reason, not enough room against full padding */
+/* same treatment as .col-rank above, "Views" overflowed for the same reason */
 .stats-table th.col-views {
     padding-left: 6px;
     padding-right: 6px;
@@ -630,21 +608,14 @@ body.stats-body {
     width: 118px;
 }
 
-/* reserves a permanent gutter on the right of the last column, wide enough
-   that SimpleBar's 10px-wide thumb track (flush against the wrapper's right
-   edge) always has empty space to sit in instead of overlapping the date/
-   time text. ".stats-table .col-lastviewed" (two classes) outranks both the
-   base ".stats-table td" padding rule and the mobile media query's shorthand
-   ".stats-table thead th, .stats-table td { padding: 8px 6px }" (one class
-   plus elements each), so this survives at every breakpoint without needing
-   its own copy inside the media query. */
+/* gutter for SimpleBar's thumb track so it never overlaps the date/time text.
+   Two classes outrank the padding shorthand in the mobile media query below,
+   so this survives at every breakpoint without a copy in there too. */
 .stats-table .col-lastviewed {
     padding-right: 16px;
 }
 
-/* same small/gray secondary-label treatment as Rank and Views; "Last Viewed"
-   fits on one line comfortably at this size, so it can center over its
-   column too instead of hanging left under the wider Workshop Item header */
+/* same treatment as Rank and Views above */
 .stats-table th.col-lastviewed {
     font-size: 0.75em;
     font-weight: 600;
@@ -653,9 +624,7 @@ body.stats-body {
     text-align: center;
 }
 
-
-/* Workshop Item column takes whatever's left; long titles truncate with an
-   ellipsis instead of forcing the table wider than its container */
+/* long titles truncate with an ellipsis instead of forcing the table wider */
 .item-cell {
     overflow: hidden;
 }
@@ -712,13 +681,10 @@ body.stats-body {
     font-size: 0.9em;
     color: #8f98a0;
     line-height: 1.3;
-    /* mirrors the header: the date/time block centers under it instead of
-       sitting flush-left, now that the header above it is centered too */
-    text-align: center;
+    text-align: center; /* mirrors the now-centered header above it */
 }
 
-/* date on its own line, time smaller/dimmer below it; both filled in client-side
-   from data-iso so the browser's own timezone is used, not the server's */
+/* filled in client-side from data-iso, using the browser's own timezone */
 .last-viewed .lv-date {
     display: block;
     color: #c7d5e0;
@@ -789,17 +755,14 @@ body.stats-body {
     border-color: #66c0f4;
 }
 
-/* tighter stats table on phones: less padding, smaller type, narrower
-   fixed columns so "Workshop Item" keeps enough room without the table
-   needing to scroll horizontally inside its wrapper */
+/* tighter table on phones so "Workshop Item" keeps enough room without scrolling */
 @media (max-width: 480px) {
     .stats-container {
         padding: 12px;
     }
 
-    /* ".stats-table thead th" (base rule, above) has higher specificity than a
-       bare ".stats-table th"; matching "thead th" here too is what actually
-       lets this padding win on header cells, not just body cells */
+    /* must match "thead th", not just "th": the base rule above uses that
+       selector too and has higher specificity */
     .stats-table thead th,
     .stats-table td {
         padding: 8px 6px;

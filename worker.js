@@ -10,10 +10,9 @@ function escapeHtml(str) {
 		.replace(/'/g, '&#039;');
 }
 
-// server-rendered fallback for the /stats "Last Viewed" cell, shown until the
-// client-side script (which knows the visitor's actual timezone) replaces it.
-// Uses UTC explicitly rather than the Worker's local time, since that's not
-// guaranteed to match the visitor's; the label makes the offset honest.
+// server-rendered fallback for /stats "Last Viewed", shown until client JS
+// replaces it with the visitor's own timezone. Uses UTC explicitly since the
+// Worker's local time isn't guaranteed to match theirs.
 function formatLastViewedFallback(iso) {
 	const d = new Date(iso);
 	if (!iso || isNaN(d)) return 'Never';
@@ -413,22 +412,17 @@ async function handleStats(env) {
 			});
 		});
 
-		// click-to-sort on the table headers. Deliberately understated: no
-		// visible sort icons except a tiny arrow on whichever column is
-		// currently active, so it's discoverable by clicking around rather
-		// than announced up front.
+		// click-to-sort headers. No icons except a tiny arrow on the active column
 		(() => {
 			const tbody = document.querySelector('.stats-table tbody');
 			if (!tbody) return;
 
-			// each column's comparator reads directly off the row's data-*
-			// attributes (set server-side) rather than re-parsing cell text
+			// comparators read the row's own data-* attributes, set server-side
 			const getters = {
 				rank: row => Number(row.dataset.rank),
 				title: row => row.dataset.title || '',
 				views: row => Number(row.dataset.views),
-				// rows with no real timestamp ('Never') sort as the oldest
-				// possible date, landing consistently at one end either way
+				// 'Never' sorts as the oldest possible date
 				lastviewed: row => {
 					const iso = row.querySelector('.last-viewed')?.dataset.iso;
 					const time = iso ? new Date(iso).getTime() : NaN;
@@ -436,8 +430,7 @@ async function handleStats(env) {
 				}
 			};
 
-			// direction a first click on each column starts with; the
-			// "obviously useful" direction for that kind of data
+			// direction the first click on each column starts with
 			const defaultDirection = { rank: 'asc', title: 'asc', views: 'desc', lastviewed: 'desc' };
 
 			const applySort = (column, direction) => {
@@ -465,9 +458,8 @@ async function handleStats(env) {
 				th.appendChild(arrow);
 			};
 
-			// each column cycles through 3 clicks: its default direction, the
-			// opposite direction, then back to the table's plain default
-			// (rank ascending, no arrow shown) rather than toggling forever
+			// 3-click cycle: default direction, opposite, then back to rank
+			// ascending with no arrow shown
 			let activeColumn = null;
 			let clickStep = 0;
 
@@ -508,20 +500,17 @@ async function handleStats(env) {
 			cell.querySelector('.lv-time').textContent = time;
 		});
 
-		// this script runs immediately during parsing, before the deferred
-		// SimpleBar script; DOMContentLoaded always fires after deferred scripts
-		// finish, so waiting for it guarantees window.SimpleBar exists. Scoped to
-		// just this one element, not the page-wide data-simplebar auto-init.
+		// waiting for DOMContentLoaded guarantees the deferred SimpleBar script
+		// has run. Scoped to just this element, not the page-wide auto-init.
 		document.addEventListener('DOMContentLoaded', () => {
 			const wrapper = document.querySelector('.table-wrapper');
 			if (!wrapper || !window.SimpleBar) return;
 
 			new SimpleBar(wrapper);
 
-			// the sticky <thead> lives inside SimpleBar's scrolled content, so its
-			// track spans the whole thing including the header row; offset the
-			// track to start below the header instead, so the thumb only ever
-			// covers the body rows it's actually representing
+			// the sticky <thead> is inside SimpleBar's scrolled content, so its
+			// track would otherwise span the header row too; offset it to start
+			// below the header instead
 			const thead = wrapper.querySelector('thead');
 			const track = wrapper.querySelector('.simplebar-track.simplebar-vertical');
 			if (thead && track) {
@@ -699,10 +688,9 @@ function generateWorkshopHTML(data) {
 	<script>
 		const fast = ${fast ? 'true' : 'false'};
 
-		// this delay isn't for Discord's scraper (it reads og: tags from the raw
-		// HTML, no JS involved); it gives the browser's async steam:// permission
-		// check room to resolve before the fallback navigation below can cancel
-		// it mid-flight.
+		// not for Discord's scraper (reads raw og: tags, no JS); gives the
+		// browser's async steam:// permission check time to resolve before
+		// the fallback navigation below can cancel it mid-flight
 		setTimeout(() => {
 			window.location.href = "${steamClientUrl}";
 		}, fast ? 0 : 1000);

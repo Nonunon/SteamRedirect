@@ -21,9 +21,7 @@
     'use strict';
 
     const FAST_CLOSE_KEY = 'sr-fast-close-enabled';
-    // defaults to on so existing behavior doesn't change; anyone who
-    // doesn't want their tab auto-closing can flip it off from the
-    // script manager's menu (right-click the extension icon)
+    // defaults on to preserve existing behavior; flip off via the script manager's menu
     const fastCloseEnabled = GM_getValue(FAST_CLOSE_KEY, true);
 
     GM_registerMenuCommand(
@@ -46,7 +44,6 @@
             const normalUrl = `https://steamre.link/?id=${workshopId}`;
             const fastUrl   = `https://steamre.link/?id=${workshopId}&fast`;
 
-            // Styles 
             GM_addStyle(`
                 #sr-wrapper {
                     position: fixed;
@@ -146,11 +143,9 @@
                 }
             `);
 
-            // Wrapper 
             const wrapper = document.createElement('div');
             wrapper.id = 'sr-wrapper';
 
-            // Main button 
             const mainBtn = document.createElement('button');
             mainBtn.id = 'sr-main-btn';
             mainBtn.textContent = 'SteamRelink';
@@ -158,11 +153,9 @@
                 window.location.href = normalUrl;
             });
 
-            // Dropdown 
             const dropdown = document.createElement('div');
             dropdown.id = 'sr-dropdown';
 
-            // Fast Redirect
             const fastItem = document.createElement('button');
             fastItem.className = 'sr-item sr-fast';
             fastItem.textContent = 'Fast Redirect';
@@ -170,21 +163,18 @@
                 window.location.href = fastUrl;
             });
 
-            // Divider
             const divider1 = document.createElement('div');
             divider1.className = 'sr-divider';
 
-            // Copy Link
             const copyItem = document.createElement('button');
             copyItem.className = 'sr-item sr-copy';
             copyItem.textContent = 'Copy Redirect Link';
 
-            // Copy Fast Link
             const copyFastItem = document.createElement('button');
             copyFastItem.className = 'sr-item sr-copy';
             copyFastItem.textContent = 'Copy Fast Redirect Link';
 
-            // Feedback line (shared, reused for both copy buttons)
+            // shared between both copy buttons below
             const feedback = document.createElement('span');
             feedback.className = 'sr-feedback';
             feedback.style.display = 'none';
@@ -217,7 +207,6 @@
             dropdown.appendChild(copyFastItem);
             dropdown.appendChild(feedback);
 
-            // Hover logic 
             let hideTimer;
             const showDropdown = () => {
                 clearTimeout(hideTimer);
@@ -233,7 +222,6 @@
             wrapper.addEventListener('mouseenter', showDropdown);
             wrapper.addEventListener('mouseleave', hideDropdown);
 
-            // Assemble 
             wrapper.appendChild(mainBtn);
             wrapper.appendChild(dropdown);
             document.body.appendChild(wrapper);
@@ -241,10 +229,9 @@
     } else if (hostname === 'steamre.link' || hostname === 'steamredirect.hi-nonunon.workers.dev') {
         if (!fastCloseEnabled) return;
 
-        // No documented safe minimum exists for this — it's an empirical
-        // number. 150ms has tested reliably in practice; if steam:// ever
-        // starts silently failing to launch, this is too aggressive and
-        // should go back up before assuming something else broke.
+        // empirical, not documented: 150ms works reliably in practice. If
+        // steam:// starts silently failing to launch, raise this before
+        // assuming something else broke.
         const CLOSE_DELAY_MS = 150;
 
         const params = new URLSearchParams(window.location.search);
