@@ -3,8 +3,8 @@
 // @namespace    https://steamre.link
 // @version      2.0
 // @description  Adds a button to redirect Steam Workshop links to the custom SteamRelink page, and auto-closes SteamRelink fast-mode tabs shortly after steam:// fires (toggleable via the script manager's menu). v2.0: renamed from SteamRedirect to SteamRelink, now points to steamre.link instead of steamredirect.hi-nonunon.workers.dev.
-// @updateURL    https://raw.githubusercontent.com/Nonunon/SteamRedirect/refs/heads/main/SteamRedirect.user.js
-// @downloadURL  https://raw.githubusercontent.com/Nonunon/SteamRedirect/refs/heads/main/SteamRedirect.user.js
+// @updateURL    https://raw.githubusercontent.com/Nonunon/SteamRelink/refs/heads/main/SteamRedirect.user.js
+// @downloadURL  https://raw.githubusercontent.com/Nonunon/SteamRelink/refs/heads/main/SteamRedirect.user.js
 // @match        *://steamcommunity.com/sharedfiles/filedetails/?id=*
 // @match        *://steamcommunity.com/workshop/filedetails/?id=*
 // @match        https://steamre.link/*

@@ -41,9 +41,9 @@ function renderHead(title, extra = "") {
 }
 
 function renderFooter() {
-	return `<a href="https://github.com/Nonunon/SteamRedirect" target="_blank" rel="noopener" class="credit">
+	return `<a href="https://github.com/Nonunon/SteamRelink" target="_blank" rel="noopener" class="credit">
 		<img src="${ICON_BASE}/images/SteamRedirect-32x32.png" alt="">
-		<span>SteamRedirect on GitHub</span>
+		<span>SteamRelink on GitHub</span>
 	</a>`;
 }
 
@@ -579,7 +579,7 @@ function generateLandingPage(origin) {
 				<code>https://steamre.link/?id=1923990111&fast</code>
 				<button class="copy-btn" data-copy="https://steamre.link/?id=1923990111&fast" title="Copy" aria-label="Copy fast mode URL"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
 			</div>
-			<p class="fast-hint">Fast mode fires the Steam launch immediately, no countdown. The <a href="https://github.com/Nonunon/SteamRedirect" target="_blank">SteamRedirect userscript</a> can also auto-close the tab afterward.</p>
+			<p class="fast-hint">Fast mode fires the Steam launch immediately, no countdown. The <a href="https://github.com/Nonunon/SteamRelink" target="_blank">SteamRelink userscript</a> can also auto-close the tab afterward.</p>
 		</div>
 	`)}
 	<div class="rectangle converter-box">

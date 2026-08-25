@@ -110,7 +110,7 @@ Once installed, visiting a Steam Workshop item page adds a **SteamRelink** butto
 
 The script also auto-closes fast-mode SteamRelink tabs shortly after Steam picks up the link (Tampermonkey and Violentmonkey only, same as the Fast URL note above). This is on by default; right-click the script manager's icon to find a menu option to turn it off.
 
-[![Install this script](https://img.shields.io/badge/Install%20User%20Script-green?style=for-the-badge)](https://raw.githubusercontent.com/Nonunon/SteamRedirect/refs/heads/main/SteamRedirect.user.js)
+[![Install this script](https://img.shields.io/badge/Install%20User%20Script-green?style=for-the-badge)](https://raw.githubusercontent.com/Nonunon/SteamRelink/refs/heads/main/SteamRedirect.user.js)
 
 ## Credits
 
