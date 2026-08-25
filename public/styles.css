@@ -540,6 +540,13 @@ body.stats-body {
     color: #c7d5e0;
 }
 
+/* faint column dividers, subtler than the row borders — enough to separate
+   the mixed data types (rank/title/count/date) without turning into a full grid */
+.stats-table th:not(:last-child),
+.stats-table td:not(:last-child) {
+    border-right: 1px solid rgba(42, 71, 94, 0.5);
+}
+
 .col-rank {
     width: 50px;
     text-align: center;
@@ -547,7 +554,9 @@ body.stats-body {
 
 /* "Rank" was tight enough to truncate to "Ran-" against the header's default
    padding/size even on desktop; shrinking + graying it also reads better as
-   a secondary label next to "Workshop Item" */
+   a secondary label next to "Workshop Item". text-align is repeated here
+   (not just on .col-rank) because ".stats-table thead th" sets it too, with
+   higher specificity (two element selectors) than a single class alone. */
 .stats-table th.col-rank {
     padding-left: 6px;
     padding-right: 6px;
@@ -555,6 +564,7 @@ body.stats-body {
     font-weight: 600;
     color: #8f98a0;
     white-space: nowrap;
+    text-align: center;
 }
 
 .col-views {
@@ -571,11 +581,24 @@ body.stats-body {
     font-weight: 600;
     color: #8f98a0;
     white-space: nowrap;
+    text-align: center;
 }
 
 .col-lastviewed {
     width: 118px;
 }
+
+/* same small/gray secondary-label treatment as Rank and Views; "Last Viewed"
+   fits on one line comfortably at this size, so it can center over its
+   column too instead of hanging left under the wider Workshop Item header */
+.stats-table th.col-lastviewed {
+    font-size: 0.75em;
+    font-weight: 600;
+    color: #8f98a0;
+    white-space: nowrap;
+    text-align: center;
+}
+
 
 /* Workshop Item column takes whatever's left; long titles truncate with an
    ellipsis instead of forcing the table wider than its container */
@@ -635,6 +658,9 @@ body.stats-body {
     font-size: 0.9em;
     color: #8f98a0;
     line-height: 1.3;
+    /* mirrors the header: the date/time block centers under it instead of
+       sitting flush-left, now that the header above it is centered too */
+    text-align: center;
 }
 
 /* date on its own line, time smaller/dimmer below it; both filled in client-side
@@ -717,7 +743,10 @@ body.stats-body {
         padding: 12px;
     }
 
-    .stats-table th,
+    /* ".stats-table thead th" (base rule, above) has higher specificity than a
+       bare ".stats-table th" — matching "thead th" here too is what actually
+       lets this padding win on header cells, not just body cells */
+    .stats-table thead th,
     .stats-table td {
         padding: 8px 6px;
         font-size: 0.85em;
