@@ -379,15 +379,15 @@ async function handleStats(env) {
 		<table class="stats-table">
 			<thead>
 				<tr>
-					<th class="col-rank">Rank</th>
-					<th>Workshop Item</th>
-					<th class="col-views">Views</th>
-					<th class="col-lastviewed">Last Viewed</th>
+					<th class="col-rank" data-sort="rank">Rank</th>
+					<th data-sort="title">Workshop Item</th>
+					<th class="col-views" data-sort="views">Views</th>
+					<th class="col-lastviewed" data-sort="lastviewed">Last Viewed</th>
 				</tr>
 			</thead>
 			<tbody>
 				${allStats.map((item, index) => `
-				<tr data-game="${escapeHtml(item.gameName || '')}">
+				<tr data-game="${escapeHtml(item.gameName || '')}" data-rank="${index + 1}" data-title="${escapeHtml(item.title)}" data-views="${item.count}">
 					<td class="rank col-rank">#${index + 1}</td>
 					<td class="item-cell"><a href="${item.url}" target="_blank" class="item-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</a></td>
 					<td class="col-views">${item.count}</td>
@@ -412,6 +412,86 @@ async function handleStats(env) {
 				row.style.display = (selected === 'all' || row.dataset.game === selected) ? '' : 'none';
 			});
 		});
+
+		// click-to-sort on the table headers. Deliberately understated: no
+		// visible sort icons except a tiny arrow on whichever column is
+		// currently active, so it's discoverable by clicking around rather
+		// than announced up front.
+		(() => {
+			const tbody = document.querySelector('.stats-table tbody');
+			if (!tbody) return;
+
+			// each column's comparator reads directly off the row's data-*
+			// attributes (set server-side) rather than re-parsing cell text
+			const getters = {
+				rank: row => Number(row.dataset.rank),
+				title: row => row.dataset.title || '',
+				views: row => Number(row.dataset.views),
+				// rows with no real timestamp ('Never') sort as the oldest
+				// possible date, landing consistently at one end either way
+				lastviewed: row => {
+					const iso = row.querySelector('.last-viewed')?.dataset.iso;
+					const time = iso ? new Date(iso).getTime() : NaN;
+					return isNaN(time) ? 0 : time;
+				}
+			};
+
+			// direction a first click on each column starts with; the
+			// "obviously useful" direction for that kind of data
+			const defaultDirection = { rank: 'asc', title: 'asc', views: 'desc', lastviewed: 'desc' };
+
+			const applySort = (column, direction) => {
+				const getter = getters[column];
+				const rows = [...tbody.querySelectorAll('tr')];
+				rows.sort((a, b) => {
+					const av = getter(a);
+					const bv = getter(b);
+					const cmp = typeof av === 'string' ? av.localeCompare(bv) : av - bv;
+					return direction === 'asc' ? cmp : -cmp;
+				});
+				rows.forEach(row => tbody.appendChild(row));
+
+				// scroll position was meaningful for the old row order, not the new one
+				const contentWrapper = document.querySelector('.table-wrapper .simplebar-content-wrapper');
+				if (contentWrapper) contentWrapper.scrollTop = 0;
+			};
+
+			const setArrow = th => {
+				document.querySelectorAll('.stats-table thead th[data-sort] .sort-arrow').forEach(el => el.remove());
+				if (!th) return;
+				const arrow = document.createElement('span');
+				arrow.className = 'sort-arrow';
+				arrow.textContent = th.dataset.currentDirection === 'asc' ? ' ▲' : ' ▼';
+				th.appendChild(arrow);
+			};
+
+			// each column cycles through 3 clicks: its default direction, the
+			// opposite direction, then back to the table's plain default
+			// (rank ascending, no arrow shown) rather than toggling forever
+			let activeColumn = null;
+			let clickStep = 0;
+
+			document.querySelectorAll('.stats-table thead th[data-sort]').forEach(th => {
+				th.addEventListener('click', () => {
+					const column = th.dataset.sort;
+					if (column !== activeColumn) clickStep = 0;
+					clickStep = (clickStep + 1) % 3;
+					activeColumn = column;
+
+					if (clickStep === 0) {
+						applySort('rank', 'asc');
+						setArrow(null);
+						activeColumn = null;
+						return;
+					}
+
+					const direction = clickStep === 1 ? defaultDirection[column] : (defaultDirection[column] === 'asc' ? 'desc' : 'asc');
+					applySort(column, direction);
+					th.dataset.currentDirection = direction;
+					setArrow(th);
+				});
+			});
+		})();
 
 		// formatted here, not server-side, so it reflects the viewer's own timezone
 		document.querySelectorAll('.last-viewed[data-iso]').forEach(cell => {

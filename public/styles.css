@@ -564,6 +564,18 @@ body.stats-body {
     z-index: 1;
 }
 
+/* click-to-sort headers; deliberately no hover treatment or icon until a
+   column is actually sorted, so this stays a "click around and find it"
+   affordance rather than an announced feature */
+.stats-table thead th[data-sort] {
+    cursor: pointer;
+}
+
+.sort-arrow {
+    color: #66c0f4;
+    font-size: 0.7em;
+}
+
 .stats-table td {
     padding: 10px 15px;
     border-bottom: 1px solid #2a475e;
