@@ -1,10 +1,13 @@
 // ==UserScript==
-// @name         SteamRedirect Button
-// @namespace    https://steamredirect.hi-nonunon.workers.dev
-// @version      1.9
-// @description  Adds a button to redirect Steam Workshop links to the custom SteamRedirect page, and auto-closes SteamRedirect fast-mode tabs shortly after steam:// fires (toggleable via the script manager's menu)
+// @name         SteamRelink Button
+// @namespace    https://steamre.link
+// @version      2.0
+// @description  Adds a button to redirect Steam Workshop links to the custom SteamRelink page, and auto-closes SteamRelink fast-mode tabs shortly after steam:// fires (toggleable via the script manager's menu). v2.0: renamed from SteamRedirect to SteamRelink, now points to steamre.link instead of steamredirect.hi-nonunon.workers.dev.
+// @updateURL    https://raw.githubusercontent.com/Nonunon/SteamRedirect/refs/heads/main/SteamRedirect.user.js
+// @downloadURL  https://raw.githubusercontent.com/Nonunon/SteamRedirect/refs/heads/main/SteamRedirect.user.js
 // @match        *://steamcommunity.com/sharedfiles/filedetails/?id=*
 // @match        *://steamcommunity.com/workshop/filedetails/?id=*
+// @match        https://steamre.link/*
 // @match        https://steamredirect.hi-nonunon.workers.dev/*
 // @grant        GM_addStyle
 // @grant        GM_setClipboard
@@ -40,8 +43,8 @@
 
         if (match && match[1]) {
             const workshopId = match[1];
-            const normalUrl = `https://steamredirect.hi-nonunon.workers.dev/?id=${workshopId}`;
-            const fastUrl   = `https://steamredirect.hi-nonunon.workers.dev/?id=${workshopId}&fast`;
+            const normalUrl = `https://steamre.link/?id=${workshopId}`;
+            const fastUrl   = `https://steamre.link/?id=${workshopId}&fast`;
 
             // Styles 
             GM_addStyle(`
@@ -150,7 +153,7 @@
             // Main button 
             const mainBtn = document.createElement('button');
             mainBtn.id = 'sr-main-btn';
-            mainBtn.textContent = 'SteamRedirect';
+            mainBtn.textContent = 'SteamRelink';
             mainBtn.addEventListener('click', () => {
                 window.location.href = normalUrl;
             });
@@ -235,7 +238,7 @@
             wrapper.appendChild(dropdown);
             document.body.appendChild(wrapper);
         }
-    } else if (hostname === 'steamredirect.hi-nonunon.workers.dev') {
+    } else if (hostname === 'steamre.link' || hostname === 'steamredirect.hi-nonunon.workers.dev') {
         if (!fastCloseEnabled) return;
 
         // No documented safe minimum exists for this — it's an empirical

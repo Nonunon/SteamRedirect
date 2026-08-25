@@ -3,7 +3,7 @@
     const match = url.match(/steamcommunity\.com\/(?:sharedfiles|workshop)\/filedetails\/\?id=(\d+)/);
 	    if (match && match[1]) {
         const workshopId = match[1];
-        const redirectUrl = `https://steamredirect.hi-nonunon.workers.dev/?id=${workshopId}`;
+        const redirectUrl = `https://steamre.link/?id=${workshopId}`;
         window.location.href = redirectUrl;
     } else {
         alert("This is not a valid Steam Workshop link.");

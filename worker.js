@@ -53,7 +53,7 @@ function renderCard(innerHtml, extraClass = "") {
 		<div class="rectangle${extraClass ? ' ' + extraClass : ''}">
 			${innerHtml}
 		</div>
-		<a href="/" class="title" id="title">SteamRedirect</a>
+		<a href="/" class="title" id="title">SteamRelink</a>
 	</div>`;
 }
 
@@ -69,7 +69,7 @@ function renderInstructions(countdownSeconds = null) {
 		? `<b><span id='countdown'>${countdownSeconds}</span> seconds</b>`
 		: `<b>10 seconds</b>`;
 
-	return `<p><b>How to Use SteamRedirect:</b></p>
+	return `<p><b>How to Use SteamRelink:</b></p>
 			<ol class="steps">
 				<li>Go to the <i>Steam Workshop</i> item you want to share.</li>
 				<li>Copy the Workshop ID in the URL after <code>?id=</code>.</li>
@@ -344,13 +344,13 @@ async function handleStats(env) {
 		const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
-	${renderHead("SteamRedirect - Statistics", `<link rel="stylesheet" href="${ICON_BASE}/vendor/simplebar.min.css">`)}
+	${renderHead("SteamRelink - Statistics", `<link rel="stylesheet" href="${ICON_BASE}/vendor/simplebar.min.css">`)}
 	<script src="${ICON_BASE}/vendor/simplebar.min.js" defer></script>
 </head>
 <body class="stats-body">
 	<div class="stats-container">
 		<div class="stats-header">
-			<a href="/" class="title">SteamRedirect Statistics</a>
+			<a href="/" class="title">SteamRelink Statistics</a>
 		</div>
 
 		<div class="stats-summary">
@@ -400,7 +400,7 @@ async function handleStats(env) {
 		` : '<p style="text-align: center; color: #c7d5e0;">No statistics available yet.</p>'}
 
 		<div class="back-link">
-			<a href="/" class="nav-button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>Back to SteamRedirect</a>
+			<a href="/" class="nav-button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>Back to SteamRelink</a>
 		</div>
 	</div>
 
@@ -551,7 +551,7 @@ async function handleStats(env) {
 
 function generateLandingPage(origin) {
 	const extraHead = `<meta property="og:type" content="website">
-	<meta property="og:title" content="SteamRedirect - Steam Workshop Link Helper">
+	<meta property="og:title" content="SteamRelink - Steam Workshop Link Helper">
 	<meta property="og:description" content="Share Steam Workshop items in Discord with direct client links">
 	<meta property="og:image" content="${origin}/images/SteamRedirect-512x512.png">
 	<meta name="twitter:card" content="summary">
@@ -561,7 +561,7 @@ function generateLandingPage(origin) {
 	return `<!DOCTYPE html>
 <html lang="en">
 <head>
-	${renderHead("SteamRedirect - Steam Workshop Link Helper", extraHead)}
+	${renderHead("SteamRelink - Steam Workshop Link Helper", extraHead)}
 </head>
 <body>
 	<a href="/stats" class="nav-button stats-corner-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>Stats</a>
@@ -571,13 +571,13 @@ function generateLandingPage(origin) {
 			${renderInstructions()}
 			<p style="margin-top: 20px;"><b>Example:</b></p>
 			<div class="code-row">
-				<code>https://steamredirect.hi-nonunon.workers.dev/?id=1923990111</code>
-				<button class="copy-btn" data-copy="https://steamredirect.hi-nonunon.workers.dev/?id=1923990111" title="Copy" aria-label="Copy example URL"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+				<code>https://steamre.link/?id=1923990111</code>
+				<button class="copy-btn" data-copy="https://steamre.link/?id=1923990111" title="Copy" aria-label="Copy example URL"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
 			</div>
 			<p style="margin-top: 20px;"><b>Fast mode</b> (skips the 10-second wait):</p>
 			<div class="code-row">
-				<code>https://steamredirect.hi-nonunon.workers.dev/?id=1923990111&fast</code>
-				<button class="copy-btn" data-copy="https://steamredirect.hi-nonunon.workers.dev/?id=1923990111&fast" title="Copy" aria-label="Copy fast mode URL"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+				<code>https://steamre.link/?id=1923990111&fast</code>
+				<button class="copy-btn" data-copy="https://steamre.link/?id=1923990111&fast" title="Copy" aria-label="Copy fast mode URL"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
 			</div>
 			<p class="fast-hint">Fast mode fires the Steam launch immediately, no countdown. The <a href="https://github.com/Nonunon/SteamRedirect" target="_blank">SteamRedirect userscript</a> can also auto-close the tab afterward.</p>
 		</div>
@@ -670,7 +670,7 @@ function generateWorkshopHTML(data) {
 	const refreshDelay = fast ? 2 : 10;
 
 	const extraHead = `<meta property="og:type" content="website">
-	<meta property="og:title" content="SteamRedirect::${safeTitle}">
+	<meta property="og:title" content="SteamRelink::${safeTitle}">
 	<meta property="og:image" content="${safePreviewUrl}">
 	<meta property="og:image:width" content="${ogWidth}">
 	<meta property="og:image:height" content="${ogHeight}">
@@ -681,7 +681,7 @@ function generateWorkshopHTML(data) {
 	return `<!DOCTYPE html>
 <html lang="en">
 <head>
-	${renderHead(`SteamRedirect::${safeTitle}`, extraHead)}
+	${renderHead(`SteamRelink::${safeTitle}`, extraHead)}
 </head>
 <body>
 	${renderCard(`
