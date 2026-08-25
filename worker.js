@@ -10,6 +10,24 @@ function escapeHtml(str) {
 		.replace(/'/g, '&#039;');
 }
 
+// server-rendered fallback for the /stats "Last Viewed" cell, shown until the
+// client-side script (which knows the visitor's actual timezone) replaces it.
+// Uses UTC explicitly rather than the Worker's local time, since that's not
+// guaranteed to match the visitor's — the label makes the offset honest.
+function formatLastViewedFallback(iso) {
+	const d = new Date(iso);
+	if (!iso || isNaN(d)) return 'Never';
+
+	const pad = n => String(n).padStart(2, '0');
+	const date = `${pad(d.getUTCMonth() + 1)}/${pad(d.getUTCDate())}/${d.getUTCFullYear()}`;
+	let hours = d.getUTCHours();
+	const ampm = hours >= 12 ? 'PM' : 'AM';
+	hours = hours % 12 || 12;
+	const time = `${pad(hours)}:${pad(d.getUTCMinutes())} ${ampm} UTC`;
+
+	return `<span class="lv-date">${date}</span><span class="lv-time">${time}</span>`;
+}
+
 // shared <head>; extra = page-specific tags
 function renderHead(title, extra = "") {
 	return `<meta charset="UTF-8">
@@ -373,7 +391,7 @@ async function handleStats(env) {
 					<td class="rank col-rank">#${index + 1}</td>
 					<td class="item-cell"><a href="${item.url}" target="_blank" class="item-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</a></td>
 					<td class="col-views">${item.count}</td>
-					<td class="last-viewed col-lastviewed" data-iso="${escapeHtml(item.lastViewed)}"></td>
+					<td class="last-viewed col-lastviewed" data-iso="${escapeHtml(item.lastViewed)}">${formatLastViewedFallback(item.lastViewed)}</td>
 				</tr>
 				`).join('')}
 			</tbody>
