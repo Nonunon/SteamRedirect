@@ -34,14 +34,14 @@ function renderHead(title, extra = "") {
 	<title>${title}</title>
 	<meta name="theme-color" content="#171a21">
 	${extra}
-	<link rel="icon" type="image/png" sizes="32x32" href="${ICON_BASE}/images/SteamRedirect-32x32.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="${ICON_BASE}/images/SteamRedirect-16x16.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="${ICON_BASE}/images/SteamRelink-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="${ICON_BASE}/images/SteamRelink-16x16.png">
 	<link rel="stylesheet" href="${ICON_BASE}/styles.css">`;
 }
 
 function renderFooter() {
 	return `<a href="https://github.com/Nonunon/SteamRelink" target="_blank" rel="noopener" class="credit">
-		<img src="${ICON_BASE}/images/SteamRedirect-32x32.png" alt="">
+		<img src="${ICON_BASE}/images/SteamRelink-32x32.png" alt="">
 		<span>SteamRelink on GitHub</span>
 	</a>`;
 }
@@ -546,7 +546,7 @@ function generateLandingPage(origin) {
 	const extraHead = `<meta property="og:type" content="website">
 	<meta property="og:title" content="SteamRelink - Steam Workshop Link Helper">
 	<meta property="og:description" content="Share Steam Workshop items in Discord with direct client links">
-	<meta property="og:image" content="${origin}/images/SteamRedirect-512x512.png">
+	<meta property="og:image" content="${origin}/images/SteamRelink-512x512.png">
 	<meta name="twitter:card" content="summary">
 	<link rel="dns-prefetch" href="//steamcommunity.com">
 	<link rel="preconnect" href="https://steamcommunity.com">`;

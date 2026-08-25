@@ -7,6 +7,8 @@ SteamRelink is a project designed to redirect specific links seamlessly, especia
 
 This repository is the source for the SteamRelink Cloudflare Worker. Redirect logic, styling, and static assets deploy together as one unit via [Wrangler](https://developers.cloudflare.com/workers/wrangler/). It previously used GitHub Pages for the stylesheet and images; that's no longer the case.
 
+To deploy your own copy, copy [`wrangler.toml.example`](wrangler.toml.example) to `wrangler.toml` and fill in your own KV namespace ID.
+
 ## Features
 
 - **URL Redirection**: Redirects links based on Steam Workshop IDs.
