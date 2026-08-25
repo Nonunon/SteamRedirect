@@ -101,11 +101,6 @@ body {
 }
 
 .title {
-    position: absolute;
-    top: -14px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 2;
     display: block; /* <a> is inline by default; text-align:center needs block */
     font-family: 'RimWordFont', sans-serif;
     font-size: 24px;
@@ -119,12 +114,22 @@ body {
     background-clip: text;
     color: transparent;
     cursor: pointer;
-    filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.7));
     transition: opacity 0.15s ease;
 }
 
 .title:hover {
     opacity: 0.8;
+}
+
+/* on the landing/redirect cards, float the title on top of the .rectangle's edge;
+   on /stats (.title sits directly in the flow, no .card wrapper) it stays static */
+.card .title {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.7));
 }
 
 /* Text content with justified text and centered last line */
