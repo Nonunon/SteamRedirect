@@ -15,13 +15,19 @@
 
 body {
     margin: 0;
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     flex-direction: column; /* body's default row direction would put
                                 .rectangle + .converter-box side by side */
     align-items: center;
     justify-content: center;
+    gap: 0;
     background: linear-gradient(135deg, #1b2838, #1d2b36 60%);
+    /* fixed 100vh + no scroll used to clip content on short mobile viewports;
+       this lets the page grow and scroll instead, with room for the
+       top-right nav button and bottom-right credit so neither overlaps content */
+    padding: 56px 16px 48px;
+    box-sizing: border-box;
 }
 
 /* Centering container */
@@ -55,6 +61,12 @@ body {
     transform: translateY(-2px);
 }
 
+.card .rectangle {
+    width: 100%;
+    max-width: none;
+    padding-top: 24px; /* room for .title floating on the top edge */
+}
+
 .rectangle.converter-box {
     width: 300px;
     margin-top: 16px;
@@ -78,21 +90,36 @@ body {
 }
 
 
+/* wraps a .rectangle card and floats its .title on top of the card's edge */
+.card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 375px;
+    max-width: calc(100vw - 40px);
+}
+
 .title {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
     display: block; /* <a> is inline by default; text-align:center needs block */
     font-family: 'RimWordFont', sans-serif;
     font-size: 24px;
     font-weight: bold;
-    margin-top: 5px;
-    margin-bottom: 10px;
     text-align: center;
     text-decoration: none;
+    white-space: nowrap;
     background: linear-gradient(to bottom, #eeeeee, #cccccc, #838383);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     color: transparent;
     cursor: pointer;
+    filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.7));
     transition: opacity 0.15s ease;
 }
 
@@ -112,33 +139,38 @@ body {
     text-align-last: center;
 }
 
-/* Adjust footer position to allow space for image */
-.footer {
+/* Small credit link, anchored to the viewport corner so it never drifts
+   over page content regardless of scroll position or content height. */
+.credit {
+    position: fixed;
+    bottom: 12px;
+    right: 12px;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.25);
+    color: #8f98a0;
     font-family: 'Roboto', sans-serif;
-    font-size: 14px;
-    font-weight: bold;
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    text-align: right;
-    color: #ffffff;
-}
-/* Gradient effect for "Nonunon" text */
-.footer span {
-    background: linear-gradient(to bottom, #ffffff, #cceeff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+    opacity: 0.6;
+    transition: opacity 0.15s ease, color 0.15s ease;
 }
 
-/* Styling for the Nonunon link */
-.footer a {
+.credit:hover {
+    opacity: 1;
     color: #66c0f4;
     text-decoration: none;
 }
 
-.footer a:hover {
-    text-decoration: underline;
+.credit img {
+    width: 16px;
+    height: 16px;
+    opacity: 0.85;
 }
 
 /* Styles for the new link section */
@@ -181,26 +213,6 @@ body {
     color: #ff6b6b;
 }
 
-
-/* Styles for the new image section in the bottom-right corner */
-.image-section {
-    position: absolute;
-    bottom: 20px;  /* Align with the footer */
-    right: 50px;   /* Slightly left of the footer for spacing */
-}
-
-/* Image styling */
-.image-section img {
-    max-width: 64px;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-}
-
-/* Allow right-click context menu */
-.image-section a {
-    pointer-events: auto; /* Allow right-click on the link itself */
-}
 
 .instructions {
     font-family: 'Roboto', sans-serif;
@@ -460,9 +472,10 @@ body.stats-body {
 
 .stats-summary {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-around;
     margin-bottom: 20px;
-    gap: 20px;
+    gap: 12px;
     flex-shrink: 0;
 }
 
@@ -472,6 +485,7 @@ body.stats-body {
     border-radius: 8px;
     text-align: center;
     flex: 1;
+    min-width: 100px;
 }
 
 .stat-number {
@@ -589,9 +603,10 @@ body.stats-body {
 }
 
 .stats-corner-link {
-    position: absolute;
+    position: fixed;
     top: 16px;
     right: 16px;
+    z-index: 5;
 }
 
 /* game filter dropdown, above the stats table */

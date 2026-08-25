@@ -23,13 +23,19 @@ function renderHead(title, extra = "") {
 }
 
 function renderFooter() {
-	return `<div class="image-section">
-		<a href="https://github.com/Nonunon/SteamRedirect" target="_blank">
-			<img src="${ICON_BASE}/images/SteamRedirect-512x512.png" alt="SteamRedirect Icon">
-		</a>
-	</div>
-	<div class="footer">
-		Created by <a href="https://github.com/Nonunon" target="_blank"><span>Nonunon</span></a>
+	return `<a href="https://github.com/Nonunon/SteamRedirect" target="_blank" rel="noopener" class="credit">
+		<img src="${ICON_BASE}/images/SteamRedirect-32x32.png" alt="">
+		<span>SteamRedirect on GitHub</span>
+	</a>`;
+}
+
+// wraps a page's main content in the .rectangle card, with the title floated on top of it
+function renderCard(innerHtml, extraClass = "") {
+	return `<div class="card">
+		<div class="rectangle${extraClass ? ' ' + extraClass : ''}">
+			${innerHtml}
+		</div>
+		<a href="/" class="title" id="title">SteamRedirect</a>
 	</div>`;
 }
 
@@ -421,8 +427,7 @@ function generateLandingPage(origin) {
 </head>
 <body>
 	<a href="/stats" class="nav-button stats-corner-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>Stats</a>
-	<div class="rectangle">
-		<a href="/" class="title" id="title">SteamRedirect</a>
+	${renderCard(`
 		${renderIntro()}
 		<div class="instructions">
 			${renderInstructions()}
@@ -438,7 +443,7 @@ function generateLandingPage(origin) {
 			</div>
 			<p class="fast-hint">Fast mode fires the Steam launch immediately, no countdown. The <a href="https://github.com/Nonunon/SteamRedirect" target="_blank">SteamRedirect userscript</a> can also auto-close the tab afterward.</p>
 		</div>
-	</div>
+	`)}
 	<div class="rectangle converter-box">
 		<div class="converter-label">Convert a Workshop link</div>
 		<div class="converter-input-row">
@@ -541,8 +546,7 @@ function generateWorkshopHTML(data) {
 	${renderHead(`SteamRedirect::${safeTitle}`, extraHead)}
 </head>
 <body>
-	<div class="rectangle">
-		<a href="/" class="title" id="title">SteamRedirect</a>
+	${renderCard(`
 		${renderIntro()}
 		<div class="link-section" id="link-section">
 			<p>Opening <a href="${workshopUrl}" target="_blank">
@@ -552,7 +556,7 @@ function generateWorkshopHTML(data) {
 		<div class="instructions">
 			${renderInstructions(refreshDelay)}
 		</div>
-	</div>
+	`)}
 	${renderFooter()}
 	<script>
 		const fast = ${fast ? 'true' : 'false'};
