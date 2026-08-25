@@ -541,13 +541,36 @@ body.stats-body {
 }
 
 .col-rank {
-    width: 44px;
+    width: 50px;
     text-align: center;
+}
+
+/* "Rank" was tight enough to truncate to "Ran-" against the header's default
+   padding/size even on desktop; shrinking + graying it also reads better as
+   a secondary label next to "Workshop Item" */
+.stats-table th.col-rank {
+    padding-left: 6px;
+    padding-right: 6px;
+    font-size: 0.75em;
+    font-weight: 600;
+    color: #8f98a0;
+    white-space: nowrap;
 }
 
 .col-views {
     width: 76px;
     text-align: center;
+}
+
+/* same treatment as .col-rank above — "Views" was overflowing its column
+   at narrow widths for the same reason: not enough room against full padding */
+.stats-table th.col-views {
+    padding-left: 6px;
+    padding-right: 6px;
+    font-size: 0.75em;
+    font-weight: 600;
+    color: #8f98a0;
+    white-space: nowrap;
 }
 
 .col-lastviewed {
@@ -701,11 +724,11 @@ body.stats-body {
     }
 
     .col-rank {
-        width: 28px;
+        width: 38px;
     }
 
     .col-views {
-        width: 48px;
+        width: 54px;
     }
 
     .col-lastviewed {
