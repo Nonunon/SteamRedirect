@@ -30,14 +30,6 @@ body {
     box-sizing: border-box;
 }
 
-.container {
-    padding: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: transparent;
-}
-
 .rectangle {
     background-color: #2a2a2a;
     border: 2px solid #3a3a3a;
@@ -514,6 +506,21 @@ body.stats-body {
     overflow-y: auto;
     border-radius: 8px;
     min-height: 0;
+}
+
+/* SimpleBar's own .simplebar-wrapper uses height: inherit, which copies the
+   parent's *computed* height value, not its rendered size. A flex item's
+   computed height stays "auto" even though flexbox gives it a real box, so
+   height: inherit silently fails here and the wrapper grows to fit all the
+   content instead of the visible area, which was making the plain overflow-y:
+   auto above kick in on the outer element too, alongside SimpleBar's own
+   internal scrolling: that's what produced the double scrollbar. height:
+   100% resolves against the actual flex-item box instead, which fixes that.
+   (Deliberately not adding overflow: hidden on the host element on top of
+   this: SimpleBar reads that as "never show a scrollbar on this axis" and
+   disables its own thumb entirely, even when content genuinely overflows.) */
+.table-wrapper > .simplebar-wrapper {
+    height: 100%;
 }
 
 /* SimpleBar scrollbar theming, scoped to just this one element: matches the
