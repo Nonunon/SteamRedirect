@@ -361,19 +361,19 @@ async function handleStats(env) {
 		<table class="stats-table">
 			<thead>
 				<tr>
-					<th style="width: 50px; text-align: center;">Rank</th>
+					<th class="col-rank">Rank</th>
 					<th>Workshop Item</th>
-					<th style="width: 100px; text-align: center;">Views</th>
-					<th style="width: 140px;">Last Viewed</th>
+					<th class="col-views">Views</th>
+					<th class="col-lastviewed">Last Viewed</th>
 				</tr>
 			</thead>
 			<tbody>
 				${allStats.map((item, index) => `
 				<tr data-game="${escapeHtml(item.gameName || '')}">
-					<td class="rank">#${index + 1}</td>
-					<td><a href="${item.url}" target="_blank">${escapeHtml(item.title)}</a></td>
-					<td style="text-align: center;">${item.count}</td>
-					<td class="last-viewed" data-iso="${escapeHtml(item.lastViewed)}"></td>
+					<td class="rank col-rank">#${index + 1}</td>
+					<td class="item-cell"><a href="${item.url}" target="_blank" class="item-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</a></td>
+					<td class="col-views">${item.count}</td>
+					<td class="last-viewed col-lastviewed" data-iso="${escapeHtml(item.lastViewed)}"></td>
 				</tr>
 				`).join('')}
 			</tbody>
