@@ -661,6 +661,19 @@ body.stats-body {
     padding-right: 4px;
 }
 
+.excluded-row {
+    opacity: 0.45;
+}
+
+.excluded-row:hover {
+    opacity: 0.7;
+}
+
+.excluded-mark {
+    cursor: help;
+    border-bottom: 1px dotted currentColor;
+}
+
 .back-link {
     text-align: center;
     margin-top: 16px;

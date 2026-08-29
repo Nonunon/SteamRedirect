@@ -1,5 +1,8 @@
-// served from public/ via the assets binding, not GitHub Pages
 const ICON_BASE = "";
+
+const STATS_EXCLUDED_IDS = new Map([
+	['1923990111', "Used as the example link, excluded so it doesn't inflate view counts."]
+]);
 
 function escapeHtml(str) {
 	return String(str)
@@ -10,9 +13,7 @@ function escapeHtml(str) {
 		.replace(/'/g, '&#039;');
 }
 
-// server-rendered fallback for /stats "Last Viewed", shown until client JS
-// replaces it with the visitor's own timezone. Uses UTC explicitly since the
-// Worker's local time isn't guaranteed to match theirs.
+// server-rendered fallback for /stats "Last Viewed"
 function formatLastViewedFallback(iso) {
 	const d = new Date(iso);
 	if (!iso || isNaN(d)) return 'Never';
@@ -336,12 +337,35 @@ async function handleStats(env) {
 			};
 		});
 
-		const allStats = (await Promise.all(statsPromises)).filter(s => s !== null);
+		const fetchedStats = (await Promise.all(statsPromises)).filter(s => s !== null);
+		const allStats = fetchedStats.filter(s => !STATS_EXCLUDED_IDS.has(s.id));
 		allStats.sort((a, b) => b.count - a.count);
 
 		const totalViews = allStats.reduce((sum, item) => sum + item.count, 0);
 		const totalItems = allStats.length;
-		const uniqueGames = [...new Set(allStats.map(s => s.gameName).filter(Boolean))].sort();
+		const uniqueGames = [...new Set(fetchedStats.map(s => s.gameName).filter(Boolean))].sort();
+
+		// excluded ids don't count toward the leaderboard, but still get a masked, grayed-out row at the bottom so the example link's page
+		const excludedIds = [...STATS_EXCLUDED_IDS.keys()];
+		const excludedStats = (await Promise.all(excludedIds.map(async id => {
+			const fromStats = fetchedStats.find(s => s.id === id);
+			if (fromStats) return { ...fromStats, reason: STATS_EXCLUDED_IDS.get(id) };
+
+			try {
+				const cached = await env.WORKSHOP_CACHE.get(id);
+				const data = cached ? JSON.parse(cached) : {};
+				return {
+					id,
+					title: data.title || 'Unknown',
+					gameName: data.gameName || null,
+					url: `https://steamcommunity.com/sharedfiles/filedetails/?id=${id}`,
+					reason: STATS_EXCLUDED_IDS.get(id)
+				};
+			} catch (error) {
+				console.error("Excluded item cache read error:", error);
+				return null;
+			}
+		}))).filter(s => s !== null);
 
 		// item.title is untrusted, always escape it
 		const html = `<!DOCTYPE html>
@@ -371,7 +395,7 @@ async function handleStats(env) {
 			</div>
 		</div>
 
-		${allStats.length > 0 ? `
+		${(allStats.length > 0 || excludedStats.length > 0) ? `
 		<div class="stats-filter">
 			<select id="game-filter">
 				<option value="all">All</option>
@@ -395,6 +419,14 @@ async function handleStats(env) {
 					<td class="item-cell"><a href="${item.url}" target="_blank" class="item-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</a></td>
 					<td class="col-views">${item.count}</td>
 					<td class="last-viewed col-lastviewed" data-iso="${escapeHtml(item.lastViewed)}">${formatLastViewedFallback(item.lastViewed)}</td>
+				</tr>
+				`).join('')}
+				${excludedStats.map(item => `
+				<tr class="excluded-row" data-excluded="true" data-game="${escapeHtml(item.gameName || '')}" data-title="${escapeHtml(item.title)}">
+					<td class="rank col-rank"><span class="excluded-mark" title="${escapeHtml(item.reason)}">#??</span></td>
+					<td class="item-cell"><a href="${item.url}" target="_blank" class="item-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</a></td>
+					<td class="col-views"><span class="excluded-mark" title="${escapeHtml(item.reason)}">??</span></td>
+					<td class="last-viewed col-lastviewed" data-iso="${escapeHtml(item.lastViewed || '')}">${formatLastViewedFallback(item.lastViewed)}</td>
 				</tr>
 				`).join('')}
 			</tbody>
@@ -441,6 +473,13 @@ async function handleStats(env) {
 				const getter = getters[column];
 				const rows = [...tbody.querySelectorAll('tr')];
 				rows.sort((a, b) => {
+					// excluded rows (masked rank/views, not counted toward the
+					// leaderboard) always sort last, regardless of column/direction
+					const aExcluded = a.dataset.excluded === 'true';
+					const bExcluded = b.dataset.excluded === 'true';
+					if (aExcluded !== bExcluded) return aExcluded ? 1 : -1;
+					if (aExcluded && bExcluded) return (a.dataset.title || '').localeCompare(b.dataset.title || '');
+
 					const av = getter(a);
 					const bv = getter(b);
 					const cmp = typeof av === 'string' ? av.localeCompare(bv) : av - bv;
